@@ -66,11 +66,8 @@ const FormModal = ({
           Delete
         </button>
       </form>
-    ) : type === "create" || type === "update" ? (
-      forms[table](type, data)
-    ) : (
-      "Form not found!"
-    );
+    ) :  "create of update form" ;
+
   };
 
   return (
