@@ -13,14 +13,14 @@ const config: Config = {
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
-      colors:{
-        fazSky:"#C3EBFA",
-        fazSkyLight:"#EDF9FD",
-        fazPurple: "#CFCEFF",
-        fazPurpleLight: "#F1F0FF",
-        fazYellow: "#FAE27C",
-        fazYellowLight: "#FEFCE8"
-      }
+      colors: {
+        lamaSky: "#C3EBFA",
+        lamaSkyLight: "#EDF9FD",
+        lamaPurple: "#CFCEFF",
+        lamaPurpleLight: "#F1F0FF",
+        lamaYellow: "#FAE27C",
+        lamaYellowLight: "#FEFCE8",
+      },
     },
   },
   plugins: [],

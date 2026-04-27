@@ -1,16 +1,50 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
+
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "../ERD.svg" // Or ERD.pdf, ERD.png
+}
+
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+}
+
+model School {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  address     String?
+  phone       String?
+  email       String?
+  website     String?
+  img         String?
+  description String?
+  createdAt   DateTime @default(now())
+
+  admins           Admin[]
+  teachers         Teacher[]
+  students         Student[]
+  parents          Parent[]
+  grades           Grade[]
+  classes          Class[]
+  subjects         Subject[]
+  lessons          Lesson[]
+  exams            Exam[]
+  assignments      Assignment[]
+  events           Event[]
+  announcements    Announcement[]
+  quizzes          Quiz[]
+  quizAssignments  QuizAssignment[]
 }
 
 model Admin {
   id       String @id
   username String @unique
+
+  schoolId Int
+  school   School @relation(fields: [schoolId], references: [id])
 }
 
 model Student {
@@ -25,15 +59,19 @@ model Student {
   bloodType   String
   sex         UserSex
   createdAt   DateTime     @default(now())
-  parentId    String
-  parent      Parent       @relation(fields: [parentId], references: [id])
+  parentId    String?
+  parent      Parent?       @relation(fields: [parentId], references: [id])
   classId     Int
   class       Class        @relation(fields: [classId], references: [id])
   gradeId     Int
   grade       Grade        @relation(fields: [gradeId], references: [id])
-  attendances Attendance[]
-  results     Result[]
-  birthday    DateTime
+  attendances     Attendance[]
+  results         Result[]
+  birthday        DateTime
+  quizSubmissions QuizSubmission[]
+
+  schoolId Int
+  school   School @relation(fields: [schoolId], references: [id])
 }
 
 model Teacher {
@@ -48,10 +86,14 @@ model Teacher {
   bloodType String
   sex       UserSex
   createdAt DateTime  @default(now())
-  subjects  Subject[]
-  lessons   Lesson[]
-  classes   Class[]
-  birthday  DateTime
+  subjects        Subject[]
+  lessons         Lesson[]
+  classes         Class[]
+  birthday        DateTime
+  quizzes         Quiz[]
+
+  schoolId Int
+  school   School @relation(fields: [schoolId], references: [id])
 }
 
 model Parent {
@@ -64,35 +106,55 @@ model Parent {
   address   String
   createdAt DateTime  @default(now())
   students  Student[]
+
+  schoolId Int
+  school   School @relation(fields: [schoolId], references: [id])
 }
 
 model Grade {
   id    Int @id @default(autoincrement())
-  level Int @unique
+  level Int
+
   students Student[]
-  classes Class[]
+  classess Class[]
+
+  schoolId Int
+  school   School @relation(fields: [schoolId], references: [id])
+
+  @@unique([level, schoolId])
 }
 
 model Class {
   id       Int    @id @default(autoincrement())
-  name     String @unique
+  name     String
   capacity Int
 
   supervisorId  String?
   supervisor    Teacher?       @relation(fields: [supervisorId], references: [id])
-  lessons       Lesson[]
-  students      Student[]
-  gradeId       Int
-  grade         Grade          @relation(fields: [gradeId], references: [id])
-  events        Event[]
-  announcements Announcement[]
+  lessons         Lesson[]
+  students        Student[]
+  gradeId         Int
+  grade           Grade          @relation(fields: [gradeId], references: [id])
+  events          Event[]
+  announcements   Announcement[]
+  quizAssignments QuizAssignment[]
+
+  schoolId Int
+  school   School @relation(fields: [schoolId], references: [id])
+
+  @@unique([name, schoolId])
 }
 
 model Subject {
   id       Int       @id @default(autoincrement())
-  name     String    @unique
+  name     String
   teachers Teacher[]
   lessons  Lesson[]
+
+  schoolId Int
+  school   School @relation(fields: [schoolId], references: [id])
+
+  @@unique([name, schoolId])
 }
 
 model Lesson {
@@ -101,6 +163,7 @@ model Lesson {
   day       Day
   startTime DateTime
   endTime   DateTime
+
   subjectId   Int
   subject     Subject      @relation(fields: [subjectId], references: [id])
   classId     Int
@@ -110,6 +173,9 @@ model Lesson {
   exams       Exam[]
   assignments Assignment[]
   attendances Attendance[]
+
+  schoolId Int
+  school   School @relation(fields: [schoolId], references: [id])
 }
 
 model Exam {
@@ -117,9 +183,13 @@ model Exam {
   title     String
   startTime DateTime
   endTime   DateTime
+
   lessonId Int
   lesson   Lesson   @relation(fields: [lessonId], references: [id])
   results  Result[]
+
+  schoolId Int
+  school   School @relation(fields: [schoolId], references: [id])
 }
 
 model Assignment {
@@ -127,14 +197,19 @@ model Assignment {
   title     String
   startDate DateTime
   dueDate   DateTime
+
   lessonId Int
   lesson   Lesson   @relation(fields: [lessonId], references: [id])
   results  Result[]
+
+  schoolId Int
+  school   School @relation(fields: [schoolId], references: [id])
 }
 
 model Result {
   id    Int @id @default(autoincrement())
   score Int
+
   examId       Int?
   exam         Exam?       @relation(fields: [examId], references: [id])
   assignmentId Int?
@@ -147,10 +222,13 @@ model Attendance {
   id      Int      @id @default(autoincrement())
   date    DateTime
   present Boolean
+
   studentId String
   student   Student @relation(fields: [studentId], references: [id])
   lessonId  Int
   lesson    Lesson  @relation(fields: [lessonId], references: [id])
+
+  @@unique([studentId, lessonId])
 }
 
 model Event {
@@ -159,8 +237,12 @@ model Event {
   description String
   startTime   DateTime
   endTime     DateTime
+
   classId Int?
   class   Class? @relation(fields: [classId], references: [id])
+
+  schoolId Int
+  school   School @relation(fields: [schoolId], references: [id])
 }
 
 model Announcement {
@@ -168,8 +250,89 @@ model Announcement {
   title       String
   description String
   date        DateTime
+
   classId Int?
   class   Class? @relation(fields: [classId], references: [id])
+
+  schoolId Int
+  school   School @relation(fields: [schoolId], references: [id])
+}
+
+model Quiz {
+  id        Int      @id @default(autoincrement())
+  title     String
+  type      QuizType @default(MCQ)
+  createdAt DateTime @default(now())
+
+  teacherId String
+  teacher   Teacher @relation(fields: [teacherId], references: [id])
+
+  schoolId Int
+  school   School @relation(fields: [schoolId], references: [id])
+
+  questions       QuizQuestion[]
+  quizAssignments QuizAssignment[]
+}
+
+model QuizQuestion {
+  id         Int    @id @default(autoincrement())
+  question   String
+  options    Json   // Array of 4 strings for MCQ
+  answer     String
+  difficulty String
+
+  quizId Int
+  quiz   Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  studentAnswers QuizAnswer[]
+}
+
+model QuizAssignment {
+  id      Int      @id @default(autoincrement())
+  dueDate DateTime
+  createdAt DateTime @default(now())
+
+  quizId  Int
+  quiz    Quiz  @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  classId Int
+  class   Class @relation(fields: [classId], references: [id])
+
+  schoolId Int
+  school   School @relation(fields: [schoolId], references: [id])
+
+  submissions QuizSubmission[]
+}
+
+model QuizSubmission {
+  id          Int      @id @default(autoincrement())
+  score       Int
+  totalMarks  Int
+  submittedAt DateTime @default(now())
+
+  quizAssignmentId Int
+  quizAssignment   QuizAssignment @relation(fields: [quizAssignmentId], references: [id], onDelete: Cascade)
+
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id])
+
+  answers QuizAnswer[]
+
+  @@unique([quizAssignmentId, studentId])
+}
+
+model QuizAnswer {
+  id             Int    @id @default(autoincrement())
+  studentAnswer  String
+
+  quizSubmissionId Int
+  quizSubmission   QuizSubmission @relation(fields: [quizSubmissionId], references: [id], onDelete: Cascade)
+
+  quizQuestionId Int
+  quizQuestion   QuizQuestion @relation(fields: [quizQuestionId], references: [id], onDelete: Cascade)
+}
+
+enum QuizType {
+  MCQ
 }
 
 enum UserSex {

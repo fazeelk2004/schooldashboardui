@@ -1,6 +1,16 @@
-"use client"
+"use client";
+
 import Image from "next/image";
-import {LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer} from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 const data = [
   {
@@ -99,12 +109,17 @@ const FinanceChart = () => {
             verticalAlign="top"
             wrapperStyle={{ paddingTop: "10px", paddingBottom: "30px" }}
           />
-          <Line type="monotone" dataKey="income" stroke="#FAE27C" strokeWidth={5} />
-          <Line type="monotone" dataKey="expense" stroke="#C3EBFA" strokeWidth={5}/>
+          <Line
+            type="monotone"
+            dataKey="income"
+            stroke="#C3EBFA"
+            strokeWidth={5}
+          />
+          <Line type="monotone" dataKey="expense" stroke="#CFCEFF" strokeWidth={5}/>
         </LineChart>
       </ResponsiveContainer>
     </div>
-  )
-}
+  );
+};
 
-export default FinanceChart
+export default FinanceChart;
