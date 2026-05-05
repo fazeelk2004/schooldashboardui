@@ -1,4 +1,4 @@
-# Lama Dev School Management Dashboard
+# NeuraLearn School Management Dashboard
 
 ## Getting Started
 

@@ -19,7 +19,7 @@ export default function DashboardLayout({
           <Image src="/logo.png" alt="logo" width={20} height={20} />
         </div>
         <span className="block md:hidden lg:block font-semibold tracking-tight text-ink">
-          SchooLama
+          NeuraLearn
         </span>
       </Link>
       <Menu />

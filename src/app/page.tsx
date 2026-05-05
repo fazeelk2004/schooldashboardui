@@ -60,7 +60,7 @@ export default function HomePage() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-soft">
               <Image src="/logo.png" alt="" width={20} height={20} />
             </div>
-            <span className="font-semibold tracking-tight">SchooLama</span>
+            <span className="font-semibold tracking-tight">NeuraLearn</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-8 text-sm text-ink-muted">
@@ -172,9 +172,9 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-ink-subtle">
           <div className="flex items-center gap-2">
             <Image src="/logo.png" alt="" width={16} height={16} />
-            <span>SchooLama</span>
+            <span>NeuraLearn</span>
           </div>
-          <span>© {new Date().getFullYear()} SchooLama. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} NeuraLearn. All rights reserved.</span>
         </div>
       </footer>
     </div>

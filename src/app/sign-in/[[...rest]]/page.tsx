@@ -41,7 +41,7 @@ const LoginPage = () => {
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-soft">
                 <Image src="/logo.png" alt="" width={20} height={20} />
               </div>
-              <span className="font-semibold tracking-tight">SchooLama</span>
+              <span className="font-semibold tracking-tight">NeuraLearn</span>
             </div>
             <div>
               <h1 className="text-xl font-semibold">Welcome back</h1>
