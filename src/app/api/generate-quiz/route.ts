@@ -55,16 +55,14 @@ async function extractText(filePath: string, mimetype: string, originalname: str
   const isTXT = mimetype?.startsWith("text/") || ext === ".txt";
 
   if (isPDF) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const pdfParseModule = require("pdf-parse");
+    const pdfParseModule: unknown = await import("pdf-parse");
+    const mod = pdfParseModule as Record<string, unknown>;
     const pdfParse =
-      typeof pdfParseModule === "function"
-        ? pdfParseModule
-        : typeof pdfParseModule.default === "function"
-        ? pdfParseModule.default
-        : Object.values(pdfParseModule as Record<string, unknown>).find(
-            (v) => typeof v === "function"
-          );
+      typeof mod.default === "function"
+        ? (mod.default as (b: Buffer) => Promise<{ text: string }>)
+        : (Object.values(mod).find((v) => typeof v === "function") as
+            | ((b: Buffer) => Promise<{ text: string }>)
+            | undefined);
     if (!pdfParse) throw new Error("pdf-parse could not be loaded");
     const buf = await fs.readFile(filePath);
     const data = await pdfParse(buf);
