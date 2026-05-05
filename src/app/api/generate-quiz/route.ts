@@ -84,7 +84,8 @@ async function extractText(filePath: string, mimetype: string, originalname: str
 }
 
 /* ---------- route ---------- */
-export const config = { api: { bodyParser: false } };
+export const runtime = "nodejs";
+export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   let tempPath: string | null = null;
