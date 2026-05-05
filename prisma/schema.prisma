@@ -37,6 +37,7 @@ model School {
   announcements    Announcement[]
   quizzes          Quiz[]
   quizAssignments  QuizAssignment[]
+  notifications    Notification[]
 }
 
 model Admin {
@@ -117,6 +118,8 @@ model Grade {
 
   students Student[]
   classess Class[]
+  exams       Exam[]
+  assignments Assignment[]
 
   schoolId Int
   school   School @relation(fields: [schoolId], references: [id])
@@ -148,8 +151,10 @@ model Class {
 model Subject {
   id       Int       @id @default(autoincrement())
   name     String
-  teachers Teacher[]
-  lessons  Lesson[]
+  teachers    Teacher[]
+  lessons     Lesson[]
+  exams       Exam[]
+  assignments Assignment[]
 
   schoolId Int
   school   School @relation(fields: [schoolId], references: [id])
@@ -158,11 +163,13 @@ model Subject {
 }
 
 model Lesson {
-  id        Int      @id @default(autoincrement())
-  name      String
-  day       Day
-  startTime DateTime
-  endTime   DateTime
+  id             Int       @id @default(autoincrement())
+  name           String
+  day            Day
+  startTime      DateTime
+  endTime        DateTime
+  semesterStart  DateTime?
+  semesterEnd    DateTime?
 
   subjectId   Int
   subject     Subject      @relation(fields: [subjectId], references: [id])
@@ -170,8 +177,6 @@ model Lesson {
   class       Class        @relation(fields: [classId], references: [id])
   teacherId   String
   teacher     Teacher      @relation(fields: [teacherId], references: [id])
-  exams       Exam[]
-  assignments Assignment[]
   attendances Attendance[]
 
   schoolId Int
@@ -181,26 +186,29 @@ model Lesson {
 model Exam {
   id        Int      @id @default(autoincrement())
   title     String
+  date      DateTime
   startTime DateTime
   endTime   DateTime
 
-  lessonId Int
-  lesson   Lesson   @relation(fields: [lessonId], references: [id])
-  results  Result[]
+  subjectId Int
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+  gradeId   Int
+  grade     Grade    @relation(fields: [gradeId], references: [id])
+  results   Result[]
 
   schoolId Int
   school   School @relation(fields: [schoolId], references: [id])
 }
 
 model Assignment {
-  id        Int      @id @default(autoincrement())
-  title     String
-  startDate DateTime
-  dueDate   DateTime
+  id      Int      @id @default(autoincrement())
+  dueDate DateTime
 
-  lessonId Int
-  lesson   Lesson   @relation(fields: [lessonId], references: [id])
-  results  Result[]
+  subjectId Int
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+  gradeId   Int
+  grade     Grade    @relation(fields: [gradeId], references: [id])
+  results   Result[]
 
   schoolId Int
   school   School @relation(fields: [schoolId], references: [id])
@@ -329,6 +337,32 @@ model QuizAnswer {
 
   quizQuestionId Int
   quizQuestion   QuizQuestion @relation(fields: [quizQuestionId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id          Int              @id @default(autoincrement())
+  userId      String
+  title       String
+  description String
+  type        NotificationType
+  link        String?
+  read        Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+
+  schoolId Int
+  school   School @relation(fields: [schoolId], references: [id])
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+}
+
+enum NotificationType {
+  ASSIGNMENT
+  EXAM
+  QUIZ
+  STUDENT
+  ANNOUNCEMENT
+  GENERAL
 }
 
 enum QuizType {

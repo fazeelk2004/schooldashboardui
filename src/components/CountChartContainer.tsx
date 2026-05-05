@@ -18,29 +18,31 @@ const CountChartContainer = async () => {
   const girls = data.find((d) => d.sex === "FEMALE")?._count || 0;
 
   return (
-    <div className="bg-white rounded-xl w-full h-full p-4">
+    <div className="h-full w-full rounded-2xl border border-line bg-surface p-5 shadow-soft">
       {/* TITLE */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-lg font-semibold">Students</h1>
-        <Image src="/moreDark.png" alt="" width={20} height={20} />
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-base font-semibold text-ink">Students</h2>
+          <p className="text-xs text-ink-subtle">Distribution by sex</p>
+        </div>
       </div>
       {/* CHART */}
       <CountChart boys={boys} girls={girls} />
       {/* BOTTOM */}
-      <div className="flex justify-center gap-16">
-        <div className="flex flex-col gap-1">
-          <div className="w-5 h-5 bg-lamaSky rounded-full" />
-          <h1 className="font-bold">{boys}</h1>
-          <h2 className="text-xs text-gray-300">
+      <div className="flex justify-center gap-12">
+        <div className="flex flex-col items-start gap-1">
+          <span className="h-2.5 w-2.5 rounded-full bg-sky-400" />
+          <p className="text-lg font-semibold text-ink">{boys}</p>
+          <p className="text-xs text-ink-subtle">
             Boys ({Math.round((boys / (boys + girls)) * 100) || 0}%)
-          </h2>
+          </p>
         </div>
-        <div className="flex flex-col gap-1">
-          <div className="w-5 h-5 bg-lamaYellow rounded-full" />
-          <h1 className="font-bold">{girls}</h1>
-          <h2 className="text-xs text-gray-300">
+        <div className="flex flex-col items-start gap-1">
+          <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+          <p className="text-lg font-semibold text-ink">{girls}</p>
+          <p className="text-xs text-ink-subtle">
             Girls ({Math.round((girls / (boys + girls)) * 100) || 0}%)
-          </h2>
+          </p>
         </div>
       </div>
     </div>

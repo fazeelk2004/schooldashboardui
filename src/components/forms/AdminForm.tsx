@@ -56,10 +56,10 @@ const AdminForm = ({
 
   return (
     <form className="flex flex-col gap-8" onSubmit={onSubmit}>
-      <h1 className="text-xl font-semibold">
+      <h1 className="text-xl font-semibold text-ink">
         {type === "create" ? "Create a new admin" : "Update the admin"}
       </h1>
-      <span className="text-xs text-gray-400 font-medium">
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">
         Authentication Information
       </span>
       <div className="flex justify-between flex-wrap gap-4">
@@ -79,14 +79,14 @@ const AdminForm = ({
           error={errors?.password}
         />
       </div>
-      <span className="text-xs text-gray-400 font-medium">
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">
         School Assignment
       </span>
       <div className="flex justify-between flex-wrap gap-4">
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">School</label>
+          <label className="text-xs font-medium text-ink-muted">School</label>
           <select
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-subtle focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 transition"
             {...register("schoolId")}
             defaultValue={data?.school?.id || data?.schoolId}
           >
@@ -97,7 +97,7 @@ const AdminForm = ({
             ))}
           </select>
           {errors.schoolId?.message && (
-            <p className="text-xs text-red-400">
+            <p className="text-xs text-rose-500">
               {errors.schoolId.message.toString()}
             </p>
           )}

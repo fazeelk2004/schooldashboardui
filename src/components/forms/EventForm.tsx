@@ -10,6 +10,12 @@ import { Dispatch, SetStateAction, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 
+const toDateTime = (v: any) => {
+  if (!v) return "";
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 16);
+};
+
 const EventForm = ({
   type,
   data,
@@ -55,7 +61,7 @@ const EventForm = ({
 
   return (
     <form className="flex flex-col gap-8" onSubmit={onSubmit}>
-      <h1 className="text-xl font-semibold">
+      <h1 className="text-xl font-semibold text-ink">
         {type === "create" ? "Create a new event" : "Update the event"}
       </h1>
 
@@ -77,7 +83,7 @@ const EventForm = ({
         <InputField
           label="Start Time"
           name="startTime"
-          defaultValue={data?.startTime ? new Date(data.startTime).toISOString().slice(0, 16) : ""}
+          defaultValue={toDateTime(data?.startTime)}
           register={register}
           error={errors?.startTime}
           type="datetime-local"
@@ -85,7 +91,7 @@ const EventForm = ({
         <InputField
           label="End Time"
           name="endTime"
-          defaultValue={data?.endTime ? new Date(data.endTime).toISOString().slice(0, 16) : ""}
+          defaultValue={toDateTime(data?.endTime)}
           register={register}
           error={errors?.endTime}
           type="datetime-local"
@@ -101,9 +107,9 @@ const EventForm = ({
           />
         )}
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Class (Optional)</label>
+          <label className="text-xs font-medium text-ink-muted">Class (Optional)</label>
           <select
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-subtle focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 transition"
             {...register("classId")}
             defaultValue={data?.classId}
           >
@@ -115,7 +121,7 @@ const EventForm = ({
             ))}
           </select>
           {errors.classId?.message && (
-            <p className="text-xs text-red-400">
+            <p className="text-xs text-rose-500">
               {errors.classId.message.toString()}
             </p>
           )}
@@ -124,9 +130,9 @@ const EventForm = ({
           <input type="hidden" {...register("schoolId")} value={currentSchoolId} />
         ) : (
           <div className="flex flex-col gap-2 w-full md:w-1/4">
-            <label className="text-xs text-gray-500">School</label>
+            <label className="text-xs font-medium text-ink-muted">School</label>
             <select
-              className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+              className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-subtle focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 transition"
               {...register("schoolId")}
               defaultValue={data?.schoolId}
             >
@@ -137,7 +143,7 @@ const EventForm = ({
               ))}
             </select>
             {errors.schoolId?.message && (
-              <p className="text-xs text-red-400">
+              <p className="text-xs text-rose-500">
                 {errors.schoolId.message.toString()}
               </p>
             )}
@@ -147,7 +153,7 @@ const EventForm = ({
       {state.error && (
         <span className="text-red-500">Something went wrong!</span>
       )}
-      <button className="bg-blue-400 text-white p-2 rounded-md">
+      <button className="inline-flex items-center justify-center rounded-lg bg-brand px-4 py-2.5 text-sm font-medium text-white shadow-soft hover:opacity-90 transition mt-2">
         {type === "create" ? "Create" : "Update"}
       </button>
     </form>

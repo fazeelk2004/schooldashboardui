@@ -2,6 +2,8 @@ import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
+import TableFilter from "@/components/TableFilter";
+import TableSort from "@/components/TableSort";
 
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
@@ -67,7 +69,7 @@ const StudentListPage = async ({
   const renderRow = (item: StudentList) => (
     <tr
       key={item.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+      className="text-sm text-ink-muted hover:bg-surface-subtle transition"
     >
       <td className="flex items-center gap-4 p-4">
         <Image
@@ -124,7 +126,7 @@ const StudentListPage = async ({
 
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
-      if (value !== undefined) {
+      if (value !== undefined && value !== "") {
         switch (key) {
           case "teacherId":
             query.class = {
@@ -135,8 +137,21 @@ const StudentListPage = async ({
               },
             };
             break;
+          case "classId":
+            query.classId = parseInt(value);
+            break;
+          case "gradeId":
+            query.gradeId = parseInt(value);
+            break;
+          case "sex":
+            if (value === "MALE" || value === "FEMALE") query.sex = value;
+            break;
           case "search":
-            query.name = { contains: value, mode: "insensitive" };
+            query.OR = [
+              { name: { contains: value, mode: "insensitive" } },
+              { surname: { contains: value, mode: "insensitive" } },
+              { username: { contains: value, mode: "insensitive" } },
+            ];
             break;
           default:
             break;
@@ -145,37 +160,87 @@ const StudentListPage = async ({
     }
   }
 
-  const [data, count] = await prisma.$transaction([
+  const order = (queryParams.order as "asc" | "desc") ?? "asc";
+  const sortMap: Record<string, Prisma.StudentOrderByWithRelationInput> = {
+    name: { name: order },
+    surname: { surname: order },
+    createdAt: { createdAt: order },
+    class: { class: { name: order } },
+  };
+  const orderBy =
+    queryParams.sort && sortMap[queryParams.sort]
+      ? sortMap[queryParams.sort]
+      : { name: "asc" as const };
+
+  const [data, count, classesForFilter, gradesForFilter] = await prisma.$transaction([
     prisma.student.findMany({
       where: query,
       include: {
         class: true,
         school: { select: { name: true } },
       },
+      orderBy,
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),
     }),
     prisma.student.count({ where: query }),
+    prisma.class.findMany({
+      where: role !== "superadmin" && schoolId ? { schoolId } : {},
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.grade.findMany({
+      where: role !== "superadmin" && schoolId ? { schoolId } : {},
+      select: { id: true, level: true },
+      orderBy: { level: "asc" },
+    }),
   ]);
 
   return (
-    <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
+    <div className="m-4 mt-0 flex-1 rounded-2xl border border-line bg-surface p-6 shadow-soft">
       {/* TOP */}
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold">All Students</h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/filter.png" alt="" width={14} height={14} />
-            </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/sort.png" alt="" width={14} height={14} />
-            </button>
+            <TableFilter
+              fields={[
+                {
+                  key: "classId",
+                  label: "Class",
+                  options: classesForFilter.map((c) => ({
+                    value: String(c.id),
+                    label: c.name,
+                  })),
+                },
+                {
+                  key: "gradeId",
+                  label: "Grade",
+                  options: gradesForFilter.map((g) => ({
+                    value: String(g.id),
+                    label: `Grade ${g.level}`,
+                  })),
+                },
+                {
+                  key: "sex",
+                  label: "Sex",
+                  options: [
+                    { value: "MALE", label: "Male" },
+                    { value: "FEMALE", label: "Female" },
+                  ],
+                },
+              ]}
+            />
+            <TableSort
+              options={[
+                { value: "name", label: "First name" },
+                { value: "surname", label: "Last name" },
+                { value: "class", label: "Class" },
+                { value: "createdAt", label: "Date added" },
+              ]}
+            />
             {role === "admin" && (
-              // <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              //   <Image src="/plus.png" alt="" width={14} height={14} />
-              // </button>
               <FormContainer table="student" type="create" />
             )}
           </div>

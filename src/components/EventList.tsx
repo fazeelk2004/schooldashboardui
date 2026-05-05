@@ -17,14 +17,31 @@ const EventList = async ({ dateParam }: { dateParam: string | undefined }) => {
     },
   });
 
-  return data.map((event) => (
+  if (data.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-line p-5 text-center text-xs text-ink-subtle">
+        No events on this day.
+      </div>
+    );
+  }
+
+  return data.map((event, idx) => (
     <div
-      className="p-5 rounded-md border-2 border-gray-100 border-t-4 odd:border-t-lamaSky even:border-t-lamaPurple"
+      className="group rounded-xl border border-line bg-surface-muted p-4 hover:border-brand/40 transition"
       key={event.id}
     >
-      <div className="flex items-center justify-between">
-        <h1 className="font-semibold text-gray-600">{event.title}</h1>
-        <span className="text-gray-300 text-xs">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3 min-w-0">
+          <span
+            className={`mt-1 h-2 w-2 shrink-0 rounded-full ${
+              idx % 2 === 0 ? "bg-brand" : "bg-amber-400"
+            }`}
+          />
+          <h3 className="truncate text-sm font-semibold text-ink">
+            {event.title}
+          </h3>
+        </div>
+        <span className="shrink-0 text-[11px] font-medium text-ink-subtle">
           {event.startTime.toLocaleTimeString("en-UK", {
             hour: "2-digit",
             minute: "2-digit",
@@ -32,7 +49,11 @@ const EventList = async ({ dateParam }: { dateParam: string | undefined }) => {
           })}
         </span>
       </div>
-      <p className="mt-2 text-gray-400 text-sm">{event.description}</p>
+      {event.description && (
+        <p className="mt-2 pl-5 text-xs text-ink-muted line-clamp-2">
+          {event.description}
+        </p>
+      )}
     </div>
   ));
 };

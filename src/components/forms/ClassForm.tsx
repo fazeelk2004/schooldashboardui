@@ -68,7 +68,7 @@ const ClassForm = ({
 
   return (
     <form className="flex flex-col gap-8" onSubmit={onSubmit}>
-      <h1 className="text-xl font-semibold">
+      <h1 className="text-xl font-semibold text-ink">
         {type === "create" ? "Create a new class" : "Update the class"}
       </h1>
 
@@ -101,9 +101,9 @@ const ClassForm = ({
           <input type="hidden" {...register("schoolId")} value={currentSchoolId} />
         ) : (
           <div className="flex flex-col gap-2 w-full md:w-1/4">
-            <label className="text-xs text-gray-500">School</label>
+            <label className="text-xs font-medium text-ink-muted">School</label>
             <select
-              className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+              className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-subtle focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 transition"
               {...register("schoolId")}
               defaultValue={data?.schoolId}
             >
@@ -114,16 +114,16 @@ const ClassForm = ({
               ))}
             </select>
             {errors.schoolId?.message && (
-              <p className="text-xs text-red-400">
+              <p className="text-xs text-rose-500">
                 {errors.schoolId.message.toString()}
               </p>
             )}
           </div>
         )}
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Supervisor</label>
+          <label className="text-xs font-medium text-ink-muted">Supervisor</label>
           <select
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-subtle focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 transition"
             {...register("supervisorId")}
             defaultValue={data?.teachers}
           >
@@ -140,15 +140,15 @@ const ClassForm = ({
             )}
           </select>
           {errors.supervisorId?.message && (
-            <p className="text-xs text-red-400">
+            <p className="text-xs text-rose-500">
               {errors.supervisorId.message.toString()}
             </p>
           )}
         </div>
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Grade</label>
+          <label className="text-xs font-medium text-ink-muted">Grade</label>
           <select
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-subtle focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 transition"
             {...register("gradeId")}
             defaultValue={data?.gradeId}
           >
@@ -163,7 +163,7 @@ const ClassForm = ({
             ))}
           </select>
           {errors.gradeId?.message && (
-            <p className="text-xs text-red-400">
+            <p className="text-xs text-rose-500">
               {errors.gradeId.message.toString()}
             </p>
           )}
@@ -172,7 +172,7 @@ const ClassForm = ({
       {state.error && (
         <span className="text-red-500">Something went wrong!</span>
       )}
-      <button className="bg-blue-400 text-white p-2 rounded-md">
+      <button className="inline-flex items-center justify-center rounded-lg bg-brand px-4 py-2.5 text-sm font-medium text-white shadow-soft hover:opacity-90 transition mt-2">
         {type === "create" ? "Create" : "Update"}
       </button>
     </form>

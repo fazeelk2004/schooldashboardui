@@ -2,18 +2,17 @@ import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
+import TableFilter from "@/components/TableFilter";
+import TableSort from "@/components/TableSort";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
-import { Class, Exam, Prisma, Subject, Teacher } from "@prisma/client";
+import { Exam, Grade, Prisma, Subject } from "@prisma/client";
 import Image from "next/image";
 import { getCurrentUser } from "@/lib/utils";
 
 type ExamList = Exam & {
-  lesson: {
-    subject: Subject;
-    class: Class;
-    teacher: Teacher;
-  };
+  subject: Subject;
+  grade: Grade;
 };
 
 const ExamListPage = async ({
@@ -28,21 +27,31 @@ const currentUserId = userId;
 
 const columns = [
   {
-    header: "Subject Name",
-    accessor: "name",
+    header: "Title",
+    accessor: "title",
   },
   {
-    header: "Class",
-    accessor: "class",
+    header: "Subject",
+    accessor: "subject",
   },
   {
-    header: "Teacher",
-    accessor: "teacher",
+    header: "Grade",
+    accessor: "grade",
     className: "hidden md:table-cell",
   },
   {
     header: "Date",
     accessor: "date",
+    className: "hidden md:table-cell",
+  },
+  {
+    header: "Start Time",
+    accessor: "startTime",
+    className: "hidden md:table-cell",
+  },
+  {
+    header: "End Time",
+    accessor: "endTime",
     className: "hidden md:table-cell",
   },
   ...(role === "admin" || role === "teacher"
@@ -67,17 +76,33 @@ const columns = [
 const renderRow = (item: ExamList) => (
   <tr
     key={item.id}
-    className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+    className="text-sm text-ink-muted hover:bg-surface-subtle transition"
   >
-    <td className="flex items-center gap-4 p-4">{item.lesson.subject.name}</td>
-    <td>{item.lesson.class.name}</td>
-    <td className="hidden md:table-cell">
-      {item.lesson.teacher.name + " " + item.lesson.teacher.surname}
+    <td className="px-4 py-3 font-medium text-ink">{item.title}</td>
+    <td className="px-4 py-3">{item.subject.name}</td>
+    <td className="hidden md:table-cell px-4 py-3">
+      <span className="chip">Grade {item.grade.level}</span>
     </td>
-    <td className="hidden md:table-cell">
-      {new Intl.DateTimeFormat("en-US").format(item.startTime)}
+    <td className="hidden md:table-cell px-4 py-3">
+      {new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Karachi" }).format(item.date)}
     </td>
-    <td>
+    <td className="hidden md:table-cell px-4 py-3">
+      {new Intl.DateTimeFormat("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: "Asia/Karachi",
+      }).format(new Date(item.startTime))}
+    </td>
+    <td className="hidden md:table-cell px-4 py-3">
+      {new Intl.DateTimeFormat("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: "Asia/Karachi",
+      }).format(new Date(item.endTime))}
+    </td>
+    <td className="px-4 py-3">
       <div className="flex items-center gap-2">
         {(role === "admin" || role === "teacher") && (
           <>
@@ -88,8 +113,8 @@ const renderRow = (item: ExamList) => (
       </div>
     </td>
     {role === "superadmin" && (
-      <td className="hidden md:table-cell">
-        <span className="text-xs bg-lamaSkyLight px-2 py-1 rounded">{(item as any).school?.name}</span>
+      <td className="hidden md:table-cell px-4 py-3">
+        <span className="chip">{(item as any).school?.name}</span>
       </td>
     )}
   </tr>
@@ -108,21 +133,21 @@ const renderRow = (item: ExamList) => (
     query.schoolId = schoolId;
   }
 
-  query.lesson = {};
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
-      if (value !== undefined) {
+      if (value !== undefined && value !== "") {
         switch (key) {
-          case "classId":
-            query.lesson.classId = parseInt(value);
+          case "subjectId":
+            query.subjectId = parseInt(value);
             break;
-          case "teacherId":
-            query.lesson.teacherId = value;
+          case "gradeId":
+            query.gradeId = parseInt(value);
             break;
           case "search":
-            query.lesson.subject = {
-              name: { contains: value, mode: "insensitive" },
-            };
+            query.OR = [
+              { title: { contains: value, mode: "insensitive" } },
+              { subject: { name: { contains: value, mode: "insensitive" } } },
+            ];
             break;
           default:
             break;
@@ -131,6 +156,19 @@ const renderRow = (item: ExamList) => (
     }
   }
 
+  const order = (queryParams.order as "asc" | "desc") ?? "asc";
+  const sortMap: Record<string, Prisma.ExamOrderByWithRelationInput> = {
+    title: { title: order },
+    date: { date: order },
+    startTime: { startTime: order },
+    subject: { subject: { name: order } },
+    grade: { grade: { level: order } },
+  };
+  const orderBy =
+    queryParams.sort && sortMap[queryParams.sort]
+      ? sortMap[queryParams.sort]
+      : ({ date: "desc" } as Prisma.ExamOrderByWithRelationInput);
+
   // ROLE CONDITIONS
 
   switch (role) {
@@ -138,24 +176,14 @@ const renderRow = (item: ExamList) => (
     case "superadmin":
       break;
     case "teacher":
-      query.lesson.teacherId = currentUserId!;
+      query.subject = { teachers: { some: { id: currentUserId! } } };
       break;
     case "student":
-      query.lesson.class = {
-        students: {
-          some: {
-            id: currentUserId!,
-          },
-        },
-      };
+      query.grade = { students: { some: { id: currentUserId! } } };
       break;
     case "parent":
-      query.lesson.class = {
-        students: {
-          some: {
-            parentId: currentUserId!,
-          },
-        },
+      query.grade = {
+        students: { some: { parentId: currentUserId! } },
       };
       break;
 
@@ -163,43 +191,75 @@ const renderRow = (item: ExamList) => (
       break;
   }
 
-  const [data, count] = await prisma.$transaction([
+  const [data, count, subjectsForFilter, gradesForFilter] = await prisma.$transaction([
     prisma.exam.findMany({
       where: query,
       include: {
-        lesson: {
-          select: {
-            subject: { select: { name: true } },
-            teacher: { select: { name: true, surname: true } },
-            class: { select: { name: true } },
-          },
-        },
+        subject: { select: { id: true, name: true } },
+        grade: { select: { id: true, level: true } },
         school: { select: { name: true } },
       },
+      orderBy,
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),
     }),
     prisma.exam.count({ where: query }),
+    prisma.subject.findMany({
+      where: role !== "superadmin" && schoolId ? { schoolId } : {},
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.grade.findMany({
+      where: role !== "superadmin" && schoolId ? { schoolId } : {},
+      select: { id: true, level: true },
+      orderBy: { level: "asc" },
+    }),
   ]);
 
   return (
-    <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
+    <div className="m-4 mt-0 flex-1 rounded-2xl border border-line bg-surface p-6 shadow-soft">
       {/* TOP */}
-      <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-lg font-semibold">All Exams</h1>
-        <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold text-ink">Exams</h1>
+          <p className="mt-1 text-xs text-ink-subtle">
+            Browse all scheduled exams across grades and subjects.
+          </p>
+        </div>
+        <div className="flex w-full md:w-auto items-center gap-3">
           <TableSearch />
-          <div className="flex items-center gap-4 self-end">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/filter.png" alt="" width={14} height={14} />
-            </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/sort.png" alt="" width={14} height={14} />
-            </button>
-            {(role === "admin" || role === "teacher") && (
-              <FormContainer table="exam" type="create" />
-            )}
-          </div>
+          <TableFilter
+            fields={[
+              {
+                key: "subjectId",
+                label: "Subject",
+                options: subjectsForFilter.map((s) => ({
+                  value: String(s.id),
+                  label: s.name,
+                })),
+              },
+              {
+                key: "gradeId",
+                label: "Grade",
+                options: gradesForFilter.map((g) => ({
+                  value: String(g.id),
+                  label: `Grade ${g.level}`,
+                })),
+              },
+            ]}
+          />
+          <TableSort
+            options={[
+              { value: "date", label: "Exam date" },
+              { value: "title", label: "Title" },
+              { value: "subject", label: "Subject" },
+              { value: "grade", label: "Grade" },
+              { value: "startTime", label: "Start time" },
+            ]}
+          />
+          {(role === "admin" || role === "teacher") && (
+            <FormContainer table="exam" type="create" />
+          )}
         </div>
       </div>
       {/* LIST */}

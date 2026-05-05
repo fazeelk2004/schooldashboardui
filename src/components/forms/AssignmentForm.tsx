@@ -51,37 +51,22 @@ const AssignmentForm = ({
     }
   }, [state, router, type, setOpen]);
 
-  const { lessons, schools, currentSchoolId } = relatedData;
+  const { subjects, grades } = relatedData;
 
   return (
     <form className="flex flex-col gap-8" onSubmit={onSubmit}>
-      <h1 className="text-xl font-semibold">
+      <h1 className="text-xl font-semibold text-ink">
         {type === "create" ? "Create a new assignment" : "Update the assignment"}
       </h1>
 
       <div className="flex justify-between flex-wrap gap-4">
         <InputField
-          label="Title"
-          name="title"
-          defaultValue={data?.title}
-          register={register}
-          error={errors?.title}
-        />
-        <InputField
-          label="Start Date"
-          name="startDate"
-          defaultValue={data?.startDate ? new Date(data.startDate).toISOString().slice(0, 16) : ""}
-          register={register}
-          error={errors?.startDate}
-          type="datetime-local"
-        />
-        <InputField
           label="Due Date"
           name="dueDate"
-          defaultValue={data?.dueDate ? new Date(data.dueDate).toISOString().slice(0, 16) : ""}
+          defaultValue={data?.dueDate ? new Date(data.dueDate).toISOString().slice(0, 10) : ""}
           register={register}
           error={errors?.dueDate}
-          type="datetime-local"
+          type="date"
         />
         {data && (
           <InputField
@@ -94,52 +79,48 @@ const AssignmentForm = ({
           />
         )}
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Lesson</label>
+          <label className="text-xs font-medium text-ink-muted">Subject</label>
           <select
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
-            {...register("lessonId")}
-            defaultValue={data?.lessonId}
+            className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-subtle focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 transition"
+            {...register("subjectId")}
+            defaultValue={data?.subjectId}
           >
-            {lessons?.map((lesson: { id: number; name: string }) => (
-              <option value={lesson.id} key={lesson.id}>
-                {lesson.name}
+            {subjects?.map((subject: { id: number; name: string }) => (
+              <option value={subject.id} key={subject.id}>
+                {subject.name}
               </option>
             ))}
           </select>
-          {errors.lessonId?.message && (
-            <p className="text-xs text-red-400">
-              {errors.lessonId.message.toString()}
+          {errors.subjectId?.message && (
+            <p className="text-xs text-rose-500">
+              {errors.subjectId.message.toString()}
             </p>
           )}
         </div>
-        {currentSchoolId ? (
-          <input type="hidden" {...register("schoolId")} value={currentSchoolId} />
-        ) : (
-          <div className="flex flex-col gap-2 w-full md:w-1/4">
-            <label className="text-xs text-gray-500">School</label>
-            <select
-              className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
-              {...register("schoolId")}
-              defaultValue={data?.schoolId}
-            >
-              {schools?.map((school: { id: number; name: string }) => (
-                <option value={school.id} key={school.id}>
-                  {school.name}
-                </option>
-              ))}
-            </select>
-            {errors.schoolId?.message && (
-              <p className="text-xs text-red-400">
-                {errors.schoolId.message.toString()}
-              </p>
-            )}
-          </div>
-        )}
+        <div className="flex flex-col gap-2 w-full md:w-1/4">
+          <label className="text-xs font-medium text-ink-muted">Grade</label>
+          <select
+            className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-subtle focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 transition"
+            {...register("gradeId")}
+            defaultValue={data?.gradeId}
+          >
+            {grades?.map((grade: { id: number; level: number }) => (
+              <option value={grade.id} key={grade.id}>
+                {grade.level}
+              </option>
+            ))}
+          </select>
+          {errors.gradeId?.message && (
+            <p className="text-xs text-rose-500">
+              {errors.gradeId.message.toString()}
+            </p>
+          )}
+        </div>
       </div>
       {state.error && (
         <span className="text-red-500">Something went wrong!</span>
       )}
-      <button className="bg-blue-400 text-white p-2 rounded-md">
+      <button className="inline-flex items-center justify-center rounded-lg bg-brand px-4 py-2.5 text-sm font-medium text-white shadow-soft hover:opacity-90 transition mt-2">
         {type === "create" ? "Create" : "Update"}
       </button>
     </form>

@@ -17,7 +17,8 @@ export type FormContainerProps = {
     | "event"
     | "announcement"
     | "school"
-    | "admin";
+    | "admin"
+    | "grade";
   type: "create" | "update" | "delete";
   data?: any;
   id?: number | string;
@@ -55,6 +56,13 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
           ? await prisma.school.findMany({ select: { id: true, name: true } })
           : [];
         relatedData = { teachers: subjectTeachers, schools: subjectSchools, currentSchoolId };
+        break;
+
+      case "grade":
+        const gradeSchools = role === "superadmin"
+          ? await prisma.school.findMany({ select: { id: true, name: true } })
+          : [];
+        relatedData = { schools: gradeSchools, currentSchoolId };
         break;
 
       case "class":
@@ -99,17 +107,23 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
         break;
 
       case "exam":
-        const examLessons = await prisma.lesson.findMany({
+        const examSubjects = await prisma.subject.findMany({
           where: {
             ...sf,
-            ...(role === "teacher" ? { teacherId: currentUserId! } : {}),
+            ...(role === "teacher"
+              ? { teachers: { some: { id: currentUserId! } } }
+              : {}),
           },
           select: { id: true, name: true },
+        });
+        const examGrades = await prisma.grade.findMany({
+          where: sf,
+          select: { id: true, level: true },
         });
         const examSchools = role === "superadmin"
           ? await prisma.school.findMany({ select: { id: true, name: true } })
           : [];
-        relatedData = { lessons: examLessons, schools: examSchools, currentSchoolId };
+        relatedData = { subjects: examSubjects, grades: examGrades, schools: examSchools, currentSchoolId };
         break;
 
       case "parent":
@@ -143,14 +157,18 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
         break;
 
       case "assignment":
-        const assignmentLessons = await prisma.lesson.findMany({
+        const assignmentSubjects = await prisma.subject.findMany({
           where: sf,
           select: { id: true, name: true },
+        });
+        const assignmentGrades = await prisma.grade.findMany({
+          where: sf,
+          select: { id: true, level: true },
         });
         const assignmentSchools = role === "superadmin"
           ? await prisma.school.findMany({ select: { id: true, name: true } })
           : [];
-        relatedData = { lessons: assignmentLessons, schools: assignmentSchools, currentSchoolId };
+        relatedData = { subjects: assignmentSubjects, grades: assignmentGrades, schools: assignmentSchools, currentSchoolId };
         break;
 
       case "result":
@@ -158,10 +176,19 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
           where: sf,
           select: { id: true, title: true },
         });
-        const resultAssignments = await prisma.assignment.findMany({
+        const resultAssignmentsRaw = await prisma.assignment.findMany({
           where: sf,
-          select: { id: true, title: true },
+          select: {
+            id: true,
+            dueDate: true,
+            subject: { select: { name: true } },
+            grade: { select: { level: true } },
+          },
         });
+        const resultAssignments = resultAssignmentsRaw.map((a) => ({
+          id: a.id,
+          title: `${a.subject.name} - Grade ${a.grade.level}`,
+        }));
         const resultStudents = await prisma.student.findMany({
           where: sf,
           select: { id: true, name: true, surname: true },

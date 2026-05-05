@@ -2,107 +2,400 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =========================================================
+   Design tokens — light + dark
+   ========================================================= */
+:root {
+  --surface: 255 255 255;
+  --surface-muted: 247 248 250;
+  --surface-subtle: 241 243 246;
+  --ink: 17 24 39;
+  --ink-muted: 75 85 99;
+  --ink-subtle: 156 163 175;
+  --line: 229 231 235;
+  --brand: 99 102 241;
+  --brand-soft: 224 231 255;
+}
+
+.dark {
+  --surface: 17 22 31;
+  --surface-muted: 23 29 40;
+  --surface-subtle: 31 39 53;
+  --ink: 237 240 245;
+  --ink-muted: 168 176 191;
+  --ink-subtle: 113 122 138;
+  --line: 39 47 62;
+  --brand: 129 140 248;
+  --brand-soft: 30 41 70;
+}
+
+html,
+body {
+  background-color: rgb(var(--surface-muted));
+  color: rgb(var(--ink));
+}
+
+/* Smooth color transitions when switching themes */
+body,
+body * {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgb(var(--line));
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(var(--ink-subtle));
+  background-clip: content-box;
+}
+
+/* =========================================================
+   react-calendar (small calendar)
+   ========================================================= */
 .react-calendar {
   width: 100% !important;
   border: none !important;
   font-family: "Inter", sans-serif !important;
+  background-color: transparent !important;
+  color: rgb(var(--ink)) !important;
+  line-height: 1.5 !important;
+}
+
+.react-calendar button {
+  color: rgb(var(--ink)) !important;
+  border-radius: 0.5rem !important;
+}
+
+.react-calendar__navigation button {
+  font-weight: 600 !important;
+  color: rgb(var(--ink)) !important;
+  background: transparent !important;
+}
+
+.react-calendar__navigation button:enabled:hover,
+.react-calendar__navigation button:enabled:focus {
+  background-color: rgb(var(--surface-subtle)) !important;
 }
 
 .react-calendar__navigation__label__labelText {
   font-weight: 600;
 }
 
-.react-calendar__tile--active {
-  background-color: #c3ebfa !important;
-  color: black !important;
+.react-calendar__month-view__weekdays {
+  text-transform: uppercase;
+  font-size: 0.7rem !important;
+  color: rgb(var(--ink-subtle)) !important;
+}
+
+.react-calendar__month-view__weekdays__weekday abbr {
+  text-decoration: none !important;
+}
+
+.react-calendar__tile {
+  padding: 0.6rem 0.3rem !important;
+  font-size: 0.85rem !important;
+}
+
+.react-calendar__tile:enabled:hover,
+.react-calendar__tile:enabled:focus {
+  background-color: rgb(var(--surface-subtle)) !important;
+}
+
+.react-calendar__tile--now {
+  background-color: rgb(var(--brand-soft)) !important;
+  color: rgb(var(--ink)) !important;
+}
+
+.react-calendar__tile--active,
+.react-calendar__tile--active:enabled:hover,
+.react-calendar__tile--active:enabled:focus {
+  background-color: rgb(var(--brand)) !important;
+  color: white !important;
+}
+
+.react-calendar__month-view__days__day--neighboringMonth {
+  color: rgb(var(--ink-subtle)) !important;
+}
+
+/* =========================================================
+   react-big-calendar
+   ========================================================= */
+.rbc-calendar {
+  color: rgb(var(--ink)) !important;
+  font-family: "Inter", sans-serif !important;
 }
 
 .rbc-btn-group:first-child {
   display: none !important;
 }
 
+.rbc-toolbar {
+  margin-bottom: 1rem !important;
+}
+
 .rbc-toolbar-label {
   text-align: right !important;
   padding: 0px 20px !important;
+  font-weight: 600 !important;
+  color: rgb(var(--ink)) !important;
 }
 
 .rbc-btn-group:last-child {
-  font-size: 13px !important;
+  font-size: 12px !important;
 }
 
 .rbc-btn-group:last-child button {
   border: none !important;
-  background-color: #f1f0ff !important;
-  margin-left: 2px !important;
+  background-color: rgb(var(--surface-subtle)) !important;
+  color: rgb(var(--ink-muted)) !important;
+  margin-left: 4px !important;
+  padding: 6px 12px !important;
+  border-radius: 0.5rem !important;
+  font-weight: 500 !important;
 }
 
-.rbc-toolbar button.rbc-active {
-  background-color: #dbdafe !important;
+.rbc-toolbar button.rbc-active,
+.rbc-toolbar button.rbc-active:hover,
+.rbc-toolbar button.rbc-active:focus {
+  background-color: rgb(var(--brand)) !important;
+  color: white !important;
   box-shadow: none !important;
 }
 
 .rbc-time-view {
-  border-color: #eee !important;
+  border: 1px solid rgb(var(--line)) !important;
+  border-radius: 0.875rem !important;
+  overflow: hidden !important;
+  background-color: rgb(var(--surface)) !important;
 }
 
 .rbc-time-header {
+  background-color: rgb(var(--surface)) !important;
+  border-bottom: 1px solid rgb(var(--line)) !important;
+}
+
+.rbc-time-header .rbc-header {
+  padding: 8px 4px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: rgb(var(--ink)) !important;
+  border-bottom: none !important;
+  border-left: 1px solid rgb(var(--line)) !important;
+}
+
+.rbc-time-header .rbc-header + .rbc-header {
+  border-left: 1px solid rgb(var(--line)) !important;
+}
+
+.rbc-time-header.rbc-overflowing {
+  border-right: none !important;
+}
+
+.rbc-allday-cell {
   display: none !important;
 }
 
 .rbc-time-content {
-  border: none !important;
+  border-top: 1px solid rgb(var(--line)) !important;
 }
 
 .rbc-time-gutter.rbc-time-column {
-  font-size: 12px !important;
+  font-size: 11px !important;
+  color: rgb(var(--ink-subtle)) !important;
 }
 
 .rbc-time-gutter.rbc-time-column .rbc-timeslot-group {
-  padding: 0px 20px !important;
+  padding: 0px 12px !important;
+  border: none !important;
+  background-color: transparent !important;
 }
 
 .rbc-timeslot-group {
-  background-color: #f7fdff !important;
+  background-color: rgb(var(--surface)) !important;
+  border-bottom: 1px solid rgb(var(--line)) !important;
+  min-height: 48px !important;
 }
 
 .rbc-day-slot {
-  font-size: 14px !important;
+  font-size: 13px !important;
+}
+
+.rbc-day-slot .rbc-time-slot {
+  border-top: 1px dashed rgb(var(--line)) !important;
+}
+
+.rbc-time-content>*+*>* {
+  border-left: 1px solid rgb(var(--line)) !important;
+}
+
+.rbc-current-time-indicator {
+  background-color: rgb(var(--brand)) !important;
+  height: 2px !important;
 }
 
 .rbc-event {
   border: none !important;
-  color: black !important;
-  padding: 10px !important;
-  margin: 10px !important;
-  width: 99% !important;
+  border-radius: 0.625rem !important;
+  color: rgb(var(--ink)) !important;
+  padding: 8px 10px !important;
+  margin: 4px 6px !important;
+  width: calc(100% - 12px) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04) !important;
 }
 
-.rbc-event:nth-child(1) {
-  background-color: #e2f8ff !important;
-}
-.rbc-event:nth-child(2) {
-  background-color: #fefce8 !important;
-}
-.rbc-event:nth-child(3) {
-  background-color: #f2f1ff !important;
-}
-.rbc-event:nth-child(4) {
-  background-color: #fdf2fb !important;
-}
-.rbc-event:nth-child(5) {
-  background-color: #e2f8ff !important;
-}
-.rbc-event:nth-child(6) {
-  background-color: #fefce8 !important;
-}
-.rbc-event:nth-child(7) {
-  background-color: #f2f1ff !important;
-}
-.rbc-event:nth-child(8) {
-  background-color: #fdf2fb !important;
+.rbc-event:focus {
+  outline: 2px solid rgb(var(--brand)) !important;
+  outline-offset: 1px !important;
 }
 
-.rbc-event-label{
-  color: gray !important;
-  margin-bottom: 5px;
+.rbc-event:nth-child(5n + 1) {
+  background-color: #e0f2fe !important;
+}
+
+.rbc-event:nth-child(5n + 2) {
+  background-color: #fef9c3 !important;
+}
+
+.rbc-event:nth-child(5n + 3) {
+  background-color: #ede9fe !important;
+}
+
+.rbc-event:nth-child(5n + 4) {
+  background-color: #fce7f3 !important;
+}
+
+.rbc-event:nth-child(5n + 5) {
+  background-color: #dcfce7 !important;
+}
+
+.dark .rbc-event:nth-child(5n + 1) {
+  background-color: #1e3a5f !important;
+  color: #e0f2fe !important;
+}
+
+.dark .rbc-event:nth-child(5n + 2) {
+  background-color: #5a4a16 !important;
+  color: #fef9c3 !important;
+}
+
+.dark .rbc-event:nth-child(5n + 3) {
+  background-color: #3b2f6b !important;
+  color: #ede9fe !important;
+}
+
+.dark .rbc-event:nth-child(5n + 4) {
+  background-color: #5a253f !important;
+  color: #fce7f3 !important;
+}
+
+.dark .rbc-event:nth-child(5n + 5) {
+  background-color: #1e4530 !important;
+  color: #dcfce7 !important;
+}
+
+.rbc-event-label {
+  color: rgb(var(--ink-subtle)) !important;
+  margin-bottom: 4px !important;
+  font-size: 10px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+}
+
+/* react-big-calendar — mobile tweaks */
+@media (max-width: 768px) {
+  .rbc-toolbar {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    margin-bottom: 0.75rem !important;
+  }
+  .rbc-toolbar-label {
+    text-align: left !important;
+    padding: 0 !important;
+    flex: 1 1 100% !important;
+    order: -1 !important;
+    font-size: 14px !important;
+  }
+  .rbc-btn-group:last-child button {
+    padding: 5px 10px !important;
+    font-size: 11px !important;
+  }
+  .rbc-time-gutter.rbc-time-column {
+    font-size: 10px !important;
+  }
+  .rbc-time-gutter.rbc-time-column .rbc-timeslot-group {
+    padding: 0 6px !important;
+  }
+  .rbc-timeslot-group {
+    min-height: 40px !important;
+  }
+  .rbc-event {
+    padding: 4px 6px !important;
+    margin: 2px 3px !important;
+    width: calc(100% - 6px) !important;
+    font-size: 11px !important;
+  }
+  .rbc-event-label {
+    font-size: 9px !important;
+    margin-bottom: 2px !important;
+  }
+}
+
+.rbc-event {
+  overflow: hidden !important;
+}
+
+.rbc-event-content {
+  height: 100%;
+  overflow: hidden !important;
+}
+
+.rbc-day-slot .rbc-event {
+  overflow: hidden !important;
+}
+
+/* =========================================================
+   Reusable utility classes
+   ========================================================= */
+@layer components {
+  .panel {
+    @apply rounded-2xl bg-surface border border-line shadow-soft;
+  }
+
+  .panel-pad {
+    @apply p-5 md:p-6;
+  }
+
+  .input-base {
+    @apply w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-subtle focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white shadow-soft hover:opacity-90 transition;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-medium text-ink-muted hover:bg-surface-subtle transition;
+  }
+
+  .chip {
+    @apply inline-flex items-center rounded-md bg-surface-subtle px-2 py-0.5 text-xs font-medium text-ink-muted;
+  }
 }

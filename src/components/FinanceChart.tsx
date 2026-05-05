@@ -77,10 +77,12 @@ const data = [
 
 const FinanceChart = () => {
   return (
-    <div className="bg-white rounded-xl w-full h-full p-4">
-      <div className="flex justify-between items-center">
-        <h1 className="text-lg font-semibold">Finance</h1>
-        <Image src="/moreDark.png" alt="" width={20} height={20} />
+    <div className="h-full w-full rounded-2xl border border-line bg-surface p-5 shadow-soft">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-base font-semibold text-ink">Finance</h2>
+          <p className="text-xs text-ink-subtle">Monthly income vs expense</p>
+        </div>
       </div>
       <ResponsiveContainer width="100%" height="90%">
         <LineChart

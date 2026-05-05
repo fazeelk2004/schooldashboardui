@@ -43,32 +43,34 @@ export default async function QuizGeneratorPage() {
         />
 
         {/* Right: Saved Quizzes */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="px-6 py-5 border-b border-gray-100">
-            <h2 className="text-lg font-bold text-gray-800">📋 My Saved Quizzes</h2>
-            <p className="text-sm text-gray-400 mt-0.5">Quizzes you&apos;ve generated and saved</p>
+        <div className="panel overflow-hidden">
+          <div className="px-6 py-5 border-b border-line">
+            <h2 className="text-lg font-semibold text-ink">My Saved Quizzes</h2>
+            <p className="text-sm text-ink-subtle mt-0.5">Quizzes you&apos;ve generated and saved</p>
           </div>
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-line">
             {savedQuizzes.length === 0 ? (
-              <div className="px-6 py-10 text-center text-gray-400">
-                <p className="text-4xl mb-2">📝</p>
-                <p>No quizzes yet. Generate one on the left!</p>
+              <div className="px-6 py-12 text-center text-ink-subtle">
+                <div className="mx-auto w-10 h-10 rounded-full bg-surface-subtle border border-line flex items-center justify-center mb-3">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6"/></svg>
+                </div>
+                <p className="text-sm">No quizzes yet. Generate one on the left.</p>
               </div>
             ) : (
               savedQuizzes.map((q: any) => (
-                <div key={q.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
+                <div key={q.id} className="px-6 py-4 hover:bg-surface-subtle transition-colors">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="font-semibold text-gray-800">{q.title}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">
+                      <p className="font-medium text-ink">{q.title}</p>
+                      <p className="text-xs text-ink-subtle mt-0.5">
                         {new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(q.createdAt))}
                       </p>
                     </div>
                     <div className="flex gap-2 text-xs shrink-0">
-                      <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                      <span className="chip">
                         {q._count.questions} Qs
                       </span>
-                      <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                      <span className="chip">
                         {q._count.quizAssignments} assigned
                       </span>
                     </div>

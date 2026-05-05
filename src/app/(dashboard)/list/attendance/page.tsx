@@ -1,123 +1,213 @@
 import prisma from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/utils";
+import { getCurrentUser, getLocalDateStr } from "@/lib/utils";
 import AttendanceMarker from "@/components/AttendanceMarker";
+import AttendanceViewer from "@/components/AttendanceViewer";
 
-const AttendanceListPage = async ({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | undefined };
-}) => {
+const DAY_ENUM = [
+  "SUNDAY",
+  "MONDAY",
+  "TUESDAY",
+  "WEDNESDAY",
+  "THURSDAY",
+  "FRIDAY",
+  "SATURDAY",
+] as const;
+
+const AttendanceListPage = async () => {
   const { userId, role, schoolId } = getCurrentUser();
 
-  // Teachers only see their own lessons; admins/superadmins see all school lessons
-  const lessons = await prisma.lesson.findMany({
-    where: {
-      ...(role === "teacher" ? { teacherId: userId! } : {}),
-      ...(role === "admin" && schoolId ? { schoolId } : {}),
-    },
-    select: {
-      id: true,
-      name: true,
-      class: { select: { id: true, name: true } },
-    },
-    orderBy: { name: "asc" },
-  });
+  const todayDayName = DAY_ENUM[new Date().getDay()];
 
-  const lessonIds = lessons.map((l) => l.id);
+  // ── TEACHER: marker view ─────────────────────────────────────────
+  if (role === "teacher") {
+    const lessons = await prisma.lesson.findMany({
+      where: {
+        teacherId: userId!,
+        day: todayDayName as any,
+      },
+      select: {
+        id: true,
+        name: true,
+        day: true,
+        startTime: true,
+        endTime: true,
+        class: { select: { id: true, name: true } },
+      },
+      orderBy: { name: "asc" },
+    });
 
-  // Fetch all students across all selected lessons' classes
-  const classIds = Array.from(new Set(lessons.map((l) => l.class.id)));
-  const students = await prisma.student.findMany({
-    where: {
-      classId: { in: classIds },
-      ...(schoolId ? { schoolId } : {}),
-    },
-    select: {
-      id: true,
-      name: true,
-      surname: true,
-      classId: true,
-    },
-    orderBy: [{ surname: "asc" }, { name: "asc" }],
-  });
+    const lessonIds = lessons.map((l) => l.id);
+    const classIds = Array.from(new Set(lessons.map((l) => l.class.id)));
 
-  // Build a map: lessonId → students[]
-  const lessonClassMap: Record<number, number> = {};
-  lessons.forEach((l) => (lessonClassMap[l.id] = l.class.id));
+    const students = await prisma.student.findMany({
+      where: {
+        classId: { in: classIds },
+        ...(schoolId ? { schoolId } : {}),
+      },
+      select: { id: true, name: true, surname: true, classId: true },
+      orderBy: [{ surname: "asc" }, { name: "asc" }],
+    });
 
-  const studentsByLesson: Record<number, { id: string; name: string; surname: string }[]> = {};
-  lessons.forEach((lesson) => {
-    studentsByLesson[lesson.id] = students.filter(
-      (s) => s.classId === lesson.class.id
+    const studentsByLesson: Record<
+      number,
+      { id: string; name: string; surname: string }[]
+    > = {};
+    lessons.forEach((lesson) => {
+      studentsByLesson[lesson.id] = students.filter(
+        (s) => s.classId === lesson.class.id
+      );
+    });
+
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const existingRecords = lessonIds.length
+      ? await prisma.attendance.findMany({
+          where: {
+            lessonId: { in: lessonIds },
+            date: { gte: todayStart, lte: todayEnd },
+          },
+          select: { studentId: true, lessonId: true, date: true, present: true },
+        })
+      : [];
+
+    const todayStr = getLocalDateStr();
+    const existingAttendance: Record<string, boolean> = {};
+    existingRecords.forEach((r) => {
+      const key = `${r.studentId}-${r.lessonId}-${todayStr}`;
+      existingAttendance[key] = r.present;
+    });
+
+    return (
+      <div className="p-6 flex flex-col gap-6">
+        <header className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-ink">
+              Attendance
+            </h1>
+            <p className="text-sm text-ink-muted mt-1">
+              Mark today&apos;s attendance for your active lesson.
+            </p>
+          </div>
+          <span className="text-xs font-medium text-ink-muted bg-surface-subtle border border-line rounded-full px-3 py-1.5">
+            {lessons.length} lesson{lessons.length !== 1 ? "s" : ""} today
+          </span>
+        </header>
+
+        {lessons.length === 0 ? (
+          <EmptyState
+            title="No lessons today"
+            message="You have no lessons scheduled for today."
+          />
+        ) : (
+          <AttendanceMarker
+            lessons={lessons.map((l) => ({
+              id: l.id,
+              name: l.name,
+              day: l.day,
+              startTime: l.startTime.toISOString(),
+              endTime: l.endTime.toISOString(),
+              class: { name: l.class.name },
+            }))}
+            studentsByLesson={studentsByLesson}
+            existingAttendance={existingAttendance}
+            today={todayStr}
+            todayDayName={todayDayName}
+          />
+        )}
+      </div>
     );
-  });
+  }
 
-  // Fetch existing attendance for this week to pre-fill checkboxes
-  const weekStart = new Date();
-  weekStart.setDate(weekStart.getDate() - 7);
-  const existingRecords = lessonIds.length > 0
-    ? await prisma.attendance.findMany({
-        where: {
-          lessonId: { in: lessonIds },
-          date: { gte: weekStart },
-        },
+  // ── ADMIN / SUPERADMIN / STUDENT / PARENT: read-only viewer ─────
+  type AttendanceWhere = {
+    schoolId?: number;
+    studentId?: string | { in: string[] };
+    lesson?: { schoolId: number };
+  };
+
+  let where: AttendanceWhere = {};
+
+  if (role === "student") {
+    where = { studentId: userId! };
+  } else if (role === "parent") {
+    const children = await prisma.student.findMany({
+      where: { parentId: userId! },
+      select: { id: true },
+    });
+    where = { studentId: { in: children.map((c) => c.id) } };
+  } else if (role === "admin" && schoolId) {
+    where = { lesson: { schoolId } };
+  }
+  // superadmin: no scoping (all)
+
+  const records = await prisma.attendance.findMany({
+    where,
+    select: {
+      id: true,
+      date: true,
+      present: true,
+      student: { select: { id: true, name: true, surname: true } },
+      lesson: {
         select: {
-          studentId: true,
-          lessonId: true,
-          date: true,
-          present: true,
+          name: true,
+          class: { select: { name: true } },
+          subject: { select: { name: true } },
+          teacher: { select: { name: true, surname: true } },
         },
-      })
-    : [];
-
-  // Build lookup: `${studentId}-${lessonId}-${date}` → present
-  const existingAttendance: Record<string, boolean> = {};
-  existingRecords.forEach((r) => {
-    const dateStr = new Date(r.date).toISOString().slice(0, 10);
-    const key = `${r.studentId}-${r.lessonId}-${dateStr}`;
-    existingAttendance[key] = r.present;
+      },
+    },
+    orderBy: { date: "desc" },
+    take: 200,
   });
 
   return (
     <div className="p-6 flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Attendance</h1>
-          <p className="text-sm text-gray-400 mt-1">
-            Select a lesson and date, then mark students as present or absent.
+          <h1 className="text-2xl font-semibold tracking-tight text-ink">
+            Attendance
+          </h1>
+          <p className="text-sm text-ink-muted mt-1">
+            {role === "parent"
+              ? "Attendance records for your children."
+              : role === "student"
+              ? "Your attendance history."
+              : "Attendance records across the school."}
           </p>
         </div>
-        <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-xl px-4 py-2">
-          <span className="text-blue-500 text-xs font-medium">
-            {lessons.length} lesson{lessons.length !== 1 ? "s" : ""} available
-          </span>
-        </div>
-      </div>
+        <span className="text-xs font-medium text-ink-muted bg-surface-subtle border border-line rounded-full px-3 py-1.5">
+          View only
+        </span>
+      </header>
 
-      {lessons.length === 0 ? (
-        <div className="bg-white rounded-xl p-16 text-center shadow-sm">
-          <div className="text-5xl mb-4">📋</div>
-          <h2 className="text-lg font-semibold text-gray-700 mb-2">No lessons found</h2>
-          <p className="text-sm text-gray-400">
-            {role === "teacher"
-              ? "You have no lessons assigned to you yet."
-              : "No lessons found for this school."}
-          </p>
-        </div>
-      ) : (
-        <AttendanceMarker
-          lessons={lessons.map((l) => ({
-            id: l.id,
-            name: l.name,
-            class: { name: l.class.name },
-          }))}
-          studentsByLesson={studentsByLesson}
-          existingAttendance={existingAttendance}
-        />
-      )}
+      <AttendanceViewer
+        role={role ?? ""}
+        records={records.map((r) => ({
+          id: r.id,
+          date: r.date.toISOString(),
+          present: r.present,
+          studentName: `${r.student.name} ${r.student.surname}`,
+          lessonName: r.lesson.name,
+          className: r.lesson.class.name,
+          subjectName: r.lesson.subject.name,
+          teacherName: `${r.lesson.teacher.name} ${r.lesson.teacher.surname}`,
+        }))}
+      />
     </div>
   );
 };
+
+const EmptyState = ({ title, message }: { title: string; message: string }) => (
+  <div className="panel p-16 text-center">
+    <div className="w-12 h-12 mx-auto rounded-full bg-surface-subtle border border-line flex items-center justify-center text-ink-subtle mb-4">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+    </div>
+    <h2 className="text-base font-semibold text-ink mb-1">{title}</h2>
+    <p className="text-sm text-ink-muted">{message}</p>
+  </div>
+);
 
 export default AttendanceListPage;

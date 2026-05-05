@@ -11,7 +11,7 @@ const localizer = momentLocalizer(moment)
 const BigCalendar = () => {
   const [view, setView] = useState<View>(Views.WORK_WEEK)
 
-  const handleOnChangeView = (selectedView:View)=>{
+  const handleOnChangeView = (selectedView: View) => {
     setView(selectedView)
   }
 

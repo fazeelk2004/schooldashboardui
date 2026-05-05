@@ -2,10 +2,13 @@ import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
+import TableFilter from "@/components/TableFilter";
+import TableSort from "@/components/TableSort";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { Parent, Prisma, Student } from "@prisma/client";
 import Image from "next/image";
+import Link from "next/link";
 
 import { getCurrentUser } from "@/lib/utils";
 
@@ -62,12 +65,17 @@ const columns = [
 const renderRow = (item: ParentList) => (
   <tr
     key={item.id}
-    className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+    className="text-sm text-ink-muted hover:bg-surface-subtle transition"
   >
     <td className="flex items-center gap-4 p-4">
       <div className="flex flex-col">
-        <h3 className="font-semibold">{item.name}</h3>
-        <p className="text-xs text-gray-500">{item?.email}</p>
+        <Link
+          href={`/list/parents/${item.id}`}
+          className="font-semibold text-ink hover:text-brand transition"
+        >
+          {item.name}
+        </Link>
+        <p className="text-xs text-ink-subtle">{item?.email}</p>
       </div>
     </td>
     <td className="hidden md:table-cell">
@@ -77,11 +85,18 @@ const renderRow = (item: ParentList) => (
     <td className="hidden md:table-cell">{item.address}</td>
     {role === "superadmin" && (
       <td className="hidden md:table-cell">
-        <span className="text-xs bg-lamaSkyLight px-2 py-1 rounded">{item.school?.name}</span>
+        <span className="chip">{item.school?.name}</span>
       </td>
     )}
     <td>
       <div className="flex items-center gap-2">
+        <Link
+          href={`/list/parents/${item.id}`}
+          className="inline-flex w-7 h-7 items-center justify-center rounded-full bg-brand-soft text-brand hover:opacity-80 transition"
+          aria-label="View"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </Link>
         {role === "admin" && (
           <>
             <FormContainer table="parent" type="update" data={item} />
@@ -108,10 +123,20 @@ const renderRow = (item: ParentList) => (
 
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
-      if (value !== undefined) {
+      if (value !== undefined && value !== "") {
         switch (key) {
+          case "classId":
+            query.students = { some: { classId: parseInt(value) } };
+            break;
+          case "gradeId":
+            query.students = { some: { gradeId: parseInt(value) } };
+            break;
           case "search":
-            query.name = { contains: value, mode: "insensitive" };
+            query.OR = [
+              { name: { contains: value, mode: "insensitive" } },
+              { surname: { contains: value, mode: "insensitive" } },
+              { username: { contains: value, mode: "insensitive" } },
+            ];
             break;
           default:
             break;
@@ -120,33 +145,76 @@ const renderRow = (item: ParentList) => (
     }
   }
 
-  const [data, count] = await prisma.$transaction([
+  const order = (queryParams.order as "asc" | "desc") ?? "asc";
+  const sortMap: Record<string, Prisma.ParentOrderByWithRelationInput> = {
+    name: { name: order },
+    surname: { surname: order },
+    createdAt: { createdAt: order },
+  };
+  const orderBy =
+    queryParams.sort && sortMap[queryParams.sort]
+      ? sortMap[queryParams.sort]
+      : { name: "asc" as const };
+
+  const [data, count, classesForFilter, gradesForFilter] = await prisma.$transaction([
     prisma.parent.findMany({
       where: query,
       include: {
         students: true,
         school: { select: { name: true } },
       },
+      orderBy,
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),
     }),
     prisma.parent.count({ where: query }),
+    prisma.class.findMany({
+      where: role !== "superadmin" && schoolId ? { schoolId } : {},
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.grade.findMany({
+      where: role !== "superadmin" && schoolId ? { schoolId } : {},
+      select: { id: true, level: true },
+      orderBy: { level: "asc" },
+    }),
   ]);
 
   return (
-    <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
+    <div className="m-4 mt-0 flex-1 rounded-2xl border border-line bg-surface p-6 shadow-soft">
       {/* TOP */}
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold">All Parents</h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/filter.png" alt="" width={14} height={14} />
-            </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/sort.png" alt="" width={14} height={14} />
-            </button>
+            <TableFilter
+              fields={[
+                {
+                  key: "classId",
+                  label: "Child's Class",
+                  options: classesForFilter.map((c) => ({
+                    value: String(c.id),
+                    label: c.name,
+                  })),
+                },
+                {
+                  key: "gradeId",
+                  label: "Child's Grade",
+                  options: gradesForFilter.map((g) => ({
+                    value: String(g.id),
+                    label: `Grade ${g.level}`,
+                  })),
+                },
+              ]}
+            />
+            <TableSort
+              options={[
+                { value: "name", label: "First name" },
+                { value: "surname", label: "Last name" },
+                { value: "createdAt", label: "Date added" },
+              ]}
+            />
             {role === "admin" && <FormContainer table="parent" type="create" />}
           </div>
         </div>

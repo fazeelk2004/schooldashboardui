@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 const TableSearch = () => {
@@ -19,13 +18,27 @@ const TableSearch = () => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full md:w-auto flex items-center gap-2 text-xs rounded-full ring-[1.5px] ring-gray-300 px-2"
+      className="flex w-full md:w-64 items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2 focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20 transition"
     >
-      <Image src="/search.png" alt="" width={14} height={14} />
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="text-ink-subtle shrink-0"
+      >
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.3-4.3" />
+      </svg>
       <input
         type="text"
         placeholder="Search..."
-        className="w-[200px] p-2 bg-transparent outline-none"
+        className="w-full bg-transparent text-sm text-ink placeholder:text-ink-subtle outline-none"
       />
     </form>
   );

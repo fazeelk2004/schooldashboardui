@@ -2,10 +2,11 @@ import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
+import TableFilter from "@/components/TableFilter";
+import TableSort from "@/components/TableSort";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { Class, Event, Prisma } from "@prisma/client";
-import Image from "next/image";
 import { getCurrentUser } from "@/lib/utils";
 
 type EventList = Event & { class: Class };
@@ -65,7 +66,7 @@ const EventListPage = async ({
   const renderRow = (item: EventList) => (
     <tr
       key={item.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+      className="text-sm text-ink-muted hover:bg-surface-subtle transition"
     >
       <td className="flex items-center gap-4 p-4">{item.title}</td>
       <td>{item.class?.name || "-"}</td>
@@ -121,6 +122,9 @@ const EventListPage = async ({
     for (const [key, value] of Object.entries(queryParams)) {
       if (value !== undefined) {
         switch (key) {
+          case "classId":
+            // handled via join below — we'll add to the OR conditions
+            break;
           case "search":
             query.title = { contains: value, mode: "insensitive" };
             break;
@@ -139,14 +143,27 @@ const EventListPage = async ({
     parent: { students: { some: { parentId: currentUserId! } } },
   };
 
-  query.OR = [
-    { classId: null },
-    {
-      class: roleConditions[role as keyof typeof roleConditions] || {},
-    },
-  ];
+  const classFilter = queryParams.classId ? parseInt(queryParams.classId) : undefined;
 
-  const [data, count] = await prisma.$transaction([
+  if (classFilter) {
+    query.classId = classFilter;
+  } else {
+    query.OR = [
+      { classId: null },
+      {
+        class: roleConditions[role as keyof typeof roleConditions] || {},
+      },
+    ];
+  }
+
+  const order = (queryParams.order as "asc" | "desc") ?? "asc";
+  const sortMap: Prisma.EventOrderByWithRelationInput = {
+    ...(queryParams.sort === "title" ? { title: order } : {}),
+    ...(queryParams.sort === "class" ? { class: { name: order } } : {}),
+    ...(queryParams.sort === "date" || !queryParams.sort ? { startTime: order } : {}),
+  };
+
+  const [data, count, classesForFilter] = await prisma.$transaction([
     prisma.event.findMany({
       where: query,
       include: {
@@ -155,24 +172,43 @@ const EventListPage = async ({
       },
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),
+      orderBy: sortMap,
     }),
     prisma.event.count({ where: query }),
+    prisma.class.findMany({
+      where: role !== "superadmin" && schoolId ? { schoolId } : {},
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
   ]);
 
   return (
-    <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
+    <div className="m-4 mt-0 flex-1 rounded-2xl border border-line bg-surface p-6 shadow-soft">
       {/* TOP */}
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold">All Events</h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/filter.png" alt="" width={14} height={14} />
-            </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/sort.png" alt="" width={14} height={14} />
-            </button>
+            <TableFilter
+              fields={[
+                {
+                  key: "classId",
+                  label: "Class",
+                  options: classesForFilter.map((c) => ({
+                    value: String(c.id),
+                    label: c.name,
+                  })),
+                },
+              ]}
+            />
+            <TableSort
+              options={[
+                { value: "date", label: "Date" },
+                { value: "title", label: "Title" },
+                { value: "class", label: "Class" },
+              ]}
+            />
             {role === "admin" && <FormContainer table="event" type="create" />}
           </div>
         </div>

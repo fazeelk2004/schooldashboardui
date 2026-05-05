@@ -56,7 +56,7 @@ const ResultForm = ({
 
   return (
     <form className="flex flex-col gap-8" onSubmit={onSubmit}>
-      <h1 className="text-xl font-semibold">
+      <h1 className="text-xl font-semibold text-ink">
         {type === "create" ? "Create a new result" : "Update the result"}
       </h1>
 
@@ -80,9 +80,9 @@ const ResultForm = ({
           />
         )}
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Student</label>
+          <label className="text-xs font-medium text-ink-muted">Student</label>
           <select
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-subtle focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 transition"
             {...register("studentId")}
             defaultValue={data?.studentId}
           >
@@ -93,15 +93,15 @@ const ResultForm = ({
             ))}
           </select>
           {errors.studentId?.message && (
-            <p className="text-xs text-red-400">
+            <p className="text-xs text-rose-500">
               {errors.studentId.message.toString()}
             </p>
           )}
         </div>
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Exam (Optional)</label>
+          <label className="text-xs font-medium text-ink-muted">Exam (Optional)</label>
           <select
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-subtle focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 transition"
             {...register("examId")}
             defaultValue={data?.examId}
           >
@@ -113,15 +113,15 @@ const ResultForm = ({
             ))}
           </select>
           {errors.examId?.message && (
-            <p className="text-xs text-red-400">
+            <p className="text-xs text-rose-500">
               {errors.examId.message.toString()}
             </p>
           )}
         </div>
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Assignment (Optional)</label>
+          <label className="text-xs font-medium text-ink-muted">Assignment (Optional)</label>
           <select
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-subtle focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 transition"
             {...register("assignmentId")}
             defaultValue={data?.assignmentId}
           >
@@ -133,7 +133,7 @@ const ResultForm = ({
             ))}
           </select>
           {errors.assignmentId?.message && (
-            <p className="text-xs text-red-400">
+            <p className="text-xs text-rose-500">
               {errors.assignmentId.message.toString()}
             </p>
           )}
@@ -142,7 +142,7 @@ const ResultForm = ({
       {state.error && (
         <span className="text-red-500">Something went wrong!</span>
       )}
-      <button className="bg-blue-400 text-white p-2 rounded-md">
+      <button className="inline-flex items-center justify-center rounded-lg bg-brand px-4 py-2.5 text-sm font-medium text-white shadow-soft hover:opacity-90 transition mt-2">
         {type === "create" ? "Create" : "Update"}
       </button>
     </form>

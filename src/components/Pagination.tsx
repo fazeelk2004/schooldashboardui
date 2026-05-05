@@ -6,55 +6,81 @@ import { useRouter } from "next/navigation";
 const Pagination = ({ page, count }: { page: number; count: number }) => {
   const router = useRouter();
 
-  const hasPrev = ITEM_PER_PAGE * (page - 1) > 0;
-  const hasNext = ITEM_PER_PAGE * (page - 1) + ITEM_PER_PAGE < count;
+  const totalPages = Math.max(1, Math.ceil(count / ITEM_PER_PAGE));
+  const hasPrev = page > 1;
+  const hasNext = page < totalPages;
 
   const changePage = (newPage: number) => {
     const params = new URLSearchParams(window.location.search);
     params.set("page", newPage.toString());
     router.push(`${window.location.pathname}?${params}`);
   };
+
+  const start = count === 0 ? 0 : ITEM_PER_PAGE * (page - 1) + 1;
+  const end = Math.min(ITEM_PER_PAGE * page, count);
+
+  // Compact page list with ellipses
+  const pageButtons: (number | "…")[] = [];
+  const push = (n: number | "…") => pageButtons.push(n);
+  const window2 = 1;
+  for (let i = 1; i <= totalPages; i++) {
+    if (
+      i === 1 ||
+      i === totalPages ||
+      (i >= page - window2 && i <= page + window2)
+    ) {
+      push(i);
+    } else if (pageButtons[pageButtons.length - 1] !== "…") {
+      push("…");
+    }
+  }
+
   return (
-    <div className="p-4 flex items-center justify-between text-gray-500">
-      <button
-        disabled={!hasPrev}
-        className="py-2 px-4 rounded-md bg-slate-200 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-        onClick={() => {
-          changePage(page - 1);
-        }}
-      >
-        Prev
-      </button>
-      <div className="flex items-center gap-2 text-sm">
-        {Array.from(
-          { length: Math.ceil(count / ITEM_PER_PAGE) },
-          (_, index) => {
-            const pageIndex = index + 1;
-            return (
-              <button
-                key={pageIndex}
-                className={`px-2 rounded-sm ${
-                  page === pageIndex ? "bg-lamaSky" : ""
-                }`}
-                onClick={() => {
-                  changePage(pageIndex);
-                }}
-              >
-                {pageIndex}
-              </button>
-            );
-          }
+    <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p className="text-xs text-ink-subtle">
+        Showing <span className="font-medium text-ink">{start}</span>–
+        <span className="font-medium text-ink">{end}</span> of{" "}
+        <span className="font-medium text-ink">{count}</span>
+      </p>
+
+      <div className="flex items-center gap-1">
+        <button
+          disabled={!hasPrev}
+          onClick={() => changePage(page - 1)}
+          className="rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-medium text-ink-muted hover:bg-surface-subtle disabled:opacity-40 disabled:cursor-not-allowed transition"
+        >
+          Prev
+        </button>
+        {pageButtons.map((p, idx) =>
+          p === "…" ? (
+            <span
+              key={`e-${idx}`}
+              className="px-2 text-xs text-ink-subtle"
+            >
+              …
+            </span>
+          ) : (
+            <button
+              key={p}
+              onClick={() => changePage(p)}
+              className={`min-w-[32px] rounded-lg px-2 py-1.5 text-xs font-medium transition ${
+                page === p
+                  ? "bg-brand text-white"
+                  : "border border-line bg-surface text-ink-muted hover:bg-surface-subtle"
+              }`}
+            >
+              {p}
+            </button>
+          )
         )}
+        <button
+          disabled={!hasNext}
+          onClick={() => changePage(page + 1)}
+          className="rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-medium text-ink-muted hover:bg-surface-subtle disabled:opacity-40 disabled:cursor-not-allowed transition"
+        >
+          Next
+        </button>
       </div>
-      <button
-        className="py-2 px-4 rounded-md bg-slate-200 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-        disabled={!hasNext}
-        onClick={() => {
-          changePage(page + 1);
-        }}
-      >
-        Next
-      </button>
     </div>
   );
 };

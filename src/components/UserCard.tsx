@@ -21,13 +21,29 @@ const UserCard = async ({
 
   const data = await modelMap[type].count({ where: whereClause });
 
+  const accent: Record<string, string> = {
+    admin: "bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-300",
+    teacher: "bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-300",
+    student: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300",
+    parent: "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-300",
+  };
+
   return (
-    <div className="rounded-2xl odd:bg-lamaPurple even:bg-lamaYellow p-4 flex-1 min-w-[130px]">
-      <div className="flex justify-end items-center">
-        <Image src="/more.png" alt="" width={20} height={20} />
+    <div className="flex-1 min-w-[140px] rounded-2xl border border-line bg-surface p-5 shadow-soft hover:shadow-card transition">
+      <div className="flex items-center justify-between">
+        <div
+          className={`flex h-10 w-10 items-center justify-center rounded-xl ${accent[type]}`}
+        >
+          <Image src={`/${type}.png`} alt="" width={18} height={18} />
+        </div>
+        <span className="text-[10px] font-medium uppercase tracking-wider text-ink-subtle">
+          Total
+        </span>
       </div>
-      <h1 className="text-2xl font-semibold my-4">{data}</h1>
-      <h2 className="capitalize text-sm font-medium text-gray-500">{type}s</h2>
+      <p className="mt-4 text-3xl font-semibold tracking-tight text-ink">
+        {data.toLocaleString()}
+      </p>
+      <p className="mt-1 text-sm capitalize text-ink-muted">{type}s</p>
     </div>
   );
 };

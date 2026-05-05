@@ -12,12 +12,12 @@ const StudentAttendanceCard = async ({ id }: { id: string }) => {
 
   const totalDays = attendance.length;
   const presentDays = attendance.filter((day) => day.present).length;
-  const percentage = (presentDays / totalDays) * 100;
+  const percentage = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : null;
+
   return (
-    <div className="">
-      <h1 className="text-xl font-semibold">{percentage || "-"}%</h1>
-      <span className="text-sm text-gray-400">Attendance</span>
-    </div>
+    <span className="text-2xl font-semibold text-ink">
+      {percentage !== null ? `${percentage}%` : "—"}
+    </span>
   );
 };
 

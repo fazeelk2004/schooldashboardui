@@ -2,6 +2,8 @@ import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
+import TableFilter from "@/components/TableFilter";
+import TableSort from "@/components/TableSort";
 import prisma from "@/lib/prisma";
 import { Class, Prisma, Subject, Teacher } from "@prisma/client";
 import Image from "next/image";
@@ -69,7 +71,7 @@ const TeacherListPage = async ({
   const renderRow = (item: TeacherList) => (
     <tr
       key={item.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+      className="text-sm text-ink-muted hover:bg-surface-subtle transition"
     >
       <td className="flex items-center gap-4 p-4">
         <Image
@@ -130,7 +132,7 @@ const TeacherListPage = async ({
 
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
-      if (value !== undefined) {
+      if (value !== undefined && value !== "") {
         switch (key) {
           case "classId":
             query.lessons = {
@@ -139,8 +141,18 @@ const TeacherListPage = async ({
               },
             };
             break;
+          case "subjectId":
+            query.subjects = { some: { id: parseInt(value) } };
+            break;
+          case "sex":
+            if (value === "MALE" || value === "FEMALE") query.sex = value;
+            break;
           case "search":
-            query.name = { contains: value, mode: "insensitive" };
+            query.OR = [
+              { name: { contains: value, mode: "insensitive" } },
+              { surname: { contains: value, mode: "insensitive" } },
+              { username: { contains: value, mode: "insensitive" } },
+            ];
             break;
           default:
             break;
@@ -149,7 +161,17 @@ const TeacherListPage = async ({
     }
   }
 
-  const [data, count] = await prisma.$transaction([
+  const sortMap: Record<string, Prisma.TeacherOrderByWithRelationInput> = {
+    name: { name: (queryParams.order as "asc" | "desc") ?? "asc" },
+    surname: { surname: (queryParams.order as "asc" | "desc") ?? "asc" },
+    createdAt: { createdAt: (queryParams.order as "asc" | "desc") ?? "desc" },
+  };
+  const orderBy =
+    queryParams.sort && sortMap[queryParams.sort]
+      ? sortMap[queryParams.sort]
+      : { name: "asc" as const };
+
+  const [data, count, subjectsForFilter, classesForFilter] = await prisma.$transaction([
     prisma.teacher.findMany({
       where: query,
       include: {
@@ -157,26 +179,66 @@ const TeacherListPage = async ({
         classes: true,
         school: { select: { name: true } },
       },
+      orderBy,
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),
     }),
     prisma.teacher.count({ where: query }),
+    prisma.subject.findMany({
+      where: role !== "superadmin" && schoolId ? { schoolId } : {},
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.class.findMany({
+      where: role !== "superadmin" && schoolId ? { schoolId } : {},
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
   ]);
 
   return (
-    <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
+    <div className="m-4 mt-0 flex-1 rounded-2xl border border-line bg-surface p-6 shadow-soft">
       {/* TOP */}
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold">All Teachers</h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/filter.png" alt="" width={14} height={14} />
-            </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/sort.png" alt="" width={14} height={14} />
-            </button>
+            <TableFilter
+              fields={[
+                {
+                  key: "subjectId",
+                  label: "Subject",
+                  options: subjectsForFilter.map((s) => ({
+                    value: String(s.id),
+                    label: s.name,
+                  })),
+                },
+                {
+                  key: "classId",
+                  label: "Class",
+                  options: classesForFilter.map((c) => ({
+                    value: String(c.id),
+                    label: c.name,
+                  })),
+                },
+                {
+                  key: "sex",
+                  label: "Sex",
+                  options: [
+                    { value: "MALE", label: "Male" },
+                    { value: "FEMALE", label: "Female" },
+                  ],
+                },
+              ]}
+            />
+            <TableSort
+              options={[
+                { value: "name", label: "First name" },
+                { value: "surname", label: "Last name" },
+                { value: "createdAt", label: "Date added" },
+              ]}
+            />
             {role === "admin" && (
               <FormContainer table="teacher" type="create" />
             )}

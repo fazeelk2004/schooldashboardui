@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
@@ -28,9 +28,21 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [locked, setLocked] = useState(false);
   const [result, setResult] = useState<{ score: number; totalMarks: number; percentage: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentQ, setCurrentQ] = useState(0);
+
+  // Refs so the visibility handler always sees the latest values
+  const assignmentRef = useRef<Assignment | null>(null);
+  const answersRef = useRef<Record<number, string>>({});
+  const submittedRef = useRef(false);
+  const lockedRef = useRef(false);
+
+  useEffect(() => { assignmentRef.current = assignment; }, [assignment]);
+  useEffect(() => { answersRef.current = answers; }, [answers]);
+  useEffect(() => { submittedRef.current = submitted; }, [submitted]);
+  useEffect(() => { lockedRef.current = locked; }, [locked]);
 
   useEffect(() => {
     fetch(`/api/quiz/${params.id}`)
@@ -42,6 +54,52 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
       })
       .catch(() => { toast.error("Failed to load quiz."); router.push("/list/my-quizzes"); });
   }, [params.id, router]);
+
+  /* ── Anti-cheat: lock quiz if student switches tabs/windows ── */
+  const lockQuiz = useCallback(async () => {
+    if (lockedRef.current || submittedRef.current) return;
+    const a = assignmentRef.current;
+    if (!a) return;
+    lockedRef.current = true;
+    setLocked(true);
+    try {
+      await fetch("/api/quiz/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          quizAssignmentId: a.id,
+          answers: a.quiz.questions.map((q) => ({
+            questionId: q.id,
+            studentAnswer: answersRef.current[q.id] || "",
+          })),
+        }),
+      });
+    } catch {
+      /* swallow — already locked client-side */
+    }
+  }, []);
+
+  useEffect(() => {
+    if (loading || submitted || locked) return;
+
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") lockQuiz();
+    };
+    const onBlur = () => lockQuiz();
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("blur", onBlur);
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("blur", onBlur);
+      window.removeEventListener("beforeunload", onBeforeUnload);
+    };
+  }, [loading, submitted, locked, lockQuiz]);
 
   const handleAnswer = (questionId: number, answer: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: answer }));
@@ -63,7 +121,6 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           quizAssignmentId: assignment.id,
-          // studentId is retrieved server-side via auth
           answers: questions.map((q) => ({
             questionId: q.id,
             studentAnswer: answers[q.id] || "",
@@ -85,7 +142,7 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
     return (
       <div className="p-4 flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-12 h-12 border-4 border-lamaSky border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-500">Loading quiz…</p>
         </div>
       </div>
@@ -97,6 +154,31 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
   const questions = assignment.quiz.questions;
   const progress = (Object.keys(answers).length / questions.length) * 100;
 
+  /* ── Locked screen (tab-switch detected) ── */
+  if (locked) {
+    return (
+      <div className="p-4 flex items-center justify-center min-h-[60vh]">
+        <div className="bg-white rounded-md shadow-sm border border-gray-200 p-8 max-w-md w-full text-center">
+          <div className="text-6xl mb-4">🔒</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Quiz Locked</h2>
+          <p className="text-gray-600 mb-4">
+            You left the quiz tab/window. For academic integrity, your attempt has been
+            locked and submitted automatically.
+          </p>
+          <div className="bg-red-50 border border-red-100 text-red-700 text-sm rounded-md p-3 mb-6">
+            You can no longer take this quiz. Please contact your teacher if you believe this was a mistake.
+          </div>
+          <button
+            onClick={() => router.push("/list/my-quizzes")}
+            className="w-full bg-lamaSky text-gray-800 py-3 rounded-md font-semibold hover:bg-lamaSky/80 transition"
+          >
+            ← Back to My Quizzes
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   /* ── Result screen ── */
   if (submitted && result) {
     const pct = result.percentage;
@@ -105,13 +187,13 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
 
     return (
       <div className="p-4 flex items-center justify-center min-h-[60vh]">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 max-w-md w-full text-center">
+        <div className="bg-white rounded-md shadow-sm border border-gray-200 p-8 max-w-md w-full text-center">
           <div className="text-6xl mb-4">{pct >= 70 ? "🎉" : pct >= 50 ? "📚" : "💪"}</div>
           <h2 className="text-2xl font-bold text-gray-800 mb-1">Quiz Submitted!</h2>
           <p className="text-gray-500 mb-6">{assignment.quiz.title}</p>
           <div className={`text-7xl font-black mb-2 ${gradeColor}`}>{pct}%</div>
           <div className={`text-2xl font-bold mb-4 ${gradeColor}`}>Grade: {grade}</div>
-          <div className="bg-gray-50 rounded-xl p-4 mb-6">
+          <div className="bg-lamaSkyLight rounded-md p-4 mb-6">
             <p className="text-gray-600 text-sm">
               You answered <strong className="text-gray-800">{result.score}</strong> out of{" "}
               <strong className="text-gray-800">{result.totalMarks}</strong> questions correctly.
@@ -119,7 +201,7 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
           </div>
           <button
             onClick={() => router.push("/list/my-quizzes")}
-            className="w-full bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition"
+            className="w-full bg-lamaSky text-gray-800 py-3 rounded-md font-semibold hover:bg-lamaSky/80 transition"
           >
             ← Back to My Quizzes
           </button>
@@ -134,11 +216,19 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
 
   return (
     <div className="p-4 max-w-3xl mx-auto">
+      {/* Anti-cheat warning banner */}
+      <div className="bg-lamaYellowLight border border-lamaYellow rounded-md px-4 py-2.5 mb-4 flex items-center gap-2 text-sm text-gray-700">
+        <span className="text-lg">⚠️</span>
+        <span>
+          <strong>Stay on this tab.</strong> Switching tabs, minimizing, or leaving this window will lock your quiz permanently.
+        </span>
+      </div>
+
       {/* Header */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-4">
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
-          <h1 className="text-white font-bold text-lg">{assignment.quiz.title}</h1>
-          <p className="text-indigo-200 text-sm">
+      <div className="bg-white rounded-md shadow-sm border border-gray-200 overflow-hidden mb-4">
+        <div className="bg-lamaSky px-6 py-4">
+          <h1 className="text-gray-800 font-bold text-lg">{assignment.quiz.title}</h1>
+          <p className="text-gray-700 text-sm">
             👤 {assignment.quiz.teacher.name} {assignment.quiz.teacher.surname} · 🏫 {assignment.class.name}
           </p>
         </div>
@@ -150,7 +240,7 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
           </div>
           <div className="w-full bg-gray-100 rounded-full h-2">
             <div
-              className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-300"
+              className="h-full bg-lamaPurple rounded-full transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -158,7 +248,7 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
       </div>
 
       {/* Question Card */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4">
+      <div className="bg-white rounded-md shadow-sm border border-gray-200 p-6 mb-4">
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-400 font-medium">Question {currentQ + 1}</span>
@@ -179,14 +269,14 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
               <button
                 key={idx}
                 onClick={() => handleAnswer(q.id, option)}
-                className={`w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all
+                className={`w-full text-left flex items-center gap-3 px-4 py-3 rounded-md border transition-all
                   ${isSelected
-                    ? "border-indigo-500 bg-indigo-50 text-indigo-800"
-                    : "border-gray-100 bg-gray-50 hover:border-indigo-200 hover:bg-indigo-50/30 text-gray-700"
+                    ? "border-lamaSky bg-lamaSkyLight text-gray-800"
+                    : "border-gray-200 bg-white hover:bg-lamaPurpleLight text-gray-700"
                   }`}
               >
                 <span className={`w-7 h-7 flex items-center justify-center rounded-full text-sm font-bold shrink-0
-                  ${isSelected ? "bg-indigo-500 text-white" : "bg-white text-gray-500 border border-gray-200"}`}>
+                  ${isSelected ? "bg-lamaSky text-gray-800" : "bg-gray-100 text-gray-500 border border-gray-200"}`}>
                   {label}
                 </span>
                 <span className="text-sm">{option}</span>
@@ -201,7 +291,7 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
         <button
           onClick={() => setCurrentQ((q) => Math.max(0, q - 1))}
           disabled={currentQ === 0}
-          className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl font-semibold hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+          className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-md font-semibold hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
         >
           ← Previous
         </button>
@@ -213,7 +303,7 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
               key={i}
               onClick={() => setCurrentQ(i)}
               className={`w-6 h-6 rounded-full text-xs font-medium transition-all
-                ${i === currentQ ? "bg-indigo-600 text-white scale-110" : answers[questions[i].id] ? "bg-indigo-200 text-indigo-700" : "bg-gray-100 text-gray-500"}`}
+                ${i === currentQ ? "bg-lamaSky text-gray-800 scale-110" : answers[questions[i].id] ? "bg-lamaPurple text-gray-700" : "bg-gray-100 text-gray-500"}`}
             >
               {i + 1}
             </button>
@@ -223,7 +313,7 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
         {currentQ < questions.length - 1 ? (
           <button
             onClick={() => setCurrentQ((q) => q + 1)}
-            className="flex-1 bg-indigo-600 text-white py-2.5 rounded-xl font-semibold hover:bg-indigo-700 transition"
+            className="flex-1 bg-lamaSky text-gray-800 py-2.5 rounded-md font-semibold hover:bg-lamaSky/80 transition"
           >
             Next →
           </button>
@@ -231,7 +321,7 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-2.5 rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 transition shadow-md"
+            className="flex-1 bg-lamaYellow text-gray-800 py-2.5 rounded-md font-semibold hover:bg-lamaYellow/80 disabled:opacity-50 transition shadow-sm"
           >
             {submitting ? "Submitting…" : "✅ Submit Quiz"}
           </button>

@@ -53,6 +53,14 @@ export const classSchema = z.object({
 
 export type ClassSchema = z.infer<typeof classSchema>;
 
+export const gradeSchema = z.object({
+  id: z.coerce.number().optional(),
+  level: z.coerce.number().min(1, { message: "Level is required!" }),
+  schoolId: z.coerce.number().min(1, { message: "School is required!" }),
+});
+
+export type GradeSchema = z.infer<typeof gradeSchema>;
+
 export const teacherSchema = z.object({
   id: z.string().optional(),
   username: z
@@ -115,12 +123,25 @@ export const studentSchema = z.object({
 
 export type StudentSchema = z.infer<typeof studentSchema>;
 
+const timeStringToDate = (v: unknown) => {
+  if (v instanceof Date) return v;
+  if (typeof v === "string" && /^\d{2}:\d{2}(:\d{2})?$/.test(v)) {
+    const [h, m] = v.split(":").map((n) => parseInt(n, 10));
+    const d = new Date();
+    d.setHours(h, m, 0, 0);
+    return d;
+  }
+  return v;
+};
+
 export const examSchema = z.object({
   id: z.coerce.number().optional(),
   title: z.string().min(1, { message: "Title name is required!" }),
-  startTime: z.coerce.date({ message: "Start time is required!" }),
-  endTime: z.coerce.date({ message: "End time is required!" }),
-  lessonId: z.coerce.number({ message: "Lesson is required!" }),
+  date: z.coerce.date({ message: "Date is required!" }),
+  startTime: z.preprocess(timeStringToDate, z.coerce.date({ message: "Start time is required!" })),
+  endTime: z.preprocess(timeStringToDate, z.coerce.date({ message: "End time is required!" })),
+  subjectId: z.coerce.number({ message: "Subject is required!" }),
+  gradeId: z.coerce.number({ message: "Grade is required!" }),
   schoolId: z.coerce.number().min(1, { message: "School is required!" }),
 });
 
@@ -158,23 +179,27 @@ export const lessonSchema = z.object({
   day: z.enum(["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"], {
     message: "Day is required!",
   }),
-  startTime: z.coerce.date({ message: "Start time is required!" }),
-  endTime: z.coerce.date({ message: "End time is required!" }),
+  startTime: z.preprocess(timeStringToDate, z.coerce.date({ message: "Start time is required!" })),
+  endTime: z.preprocess(timeStringToDate, z.coerce.date({ message: "End time is required!" })),
+  semesterStart: z.coerce.date({ message: "Semester start is required!" }),
+  semesterEnd: z.coerce.date({ message: "Semester end is required!" }),
   subjectId: z.coerce.number({ message: "Subject is required!" }),
   classId: z.coerce.number({ message: "Class is required!" }),
   teacherId: z.string({ message: "Teacher is required!" }),
   schoolId: z.coerce.number().min(1, { message: "School is required!" }),
+}).refine((d) => d.semesterEnd > d.semesterStart, {
+  message: "Semester end must be after semester start",
+  path: ["semesterEnd"],
 });
 
 export type LessonSchema = z.infer<typeof lessonSchema>;
 
 export const assignmentSchema = z.object({
   id: z.coerce.number().optional(),
-  title: z.string().min(1, { message: "Title is required!" }),
-  startDate: z.coerce.date({ message: "Start date is required!" }),
   dueDate: z.coerce.date({ message: "Due date is required!" }),
-  lessonId: z.coerce.number({ message: "Lesson is required!" }),
-  schoolId: z.coerce.number().min(1, { message: "School is required!" }),
+  subjectId: z.coerce.number({ message: "Subject is required!" }),
+  gradeId: z.coerce.number({ message: "Grade is required!" }),
+  schoolId: z.coerce.number().optional(),
 });
 
 export type AssignmentSchema = z.infer<typeof assignmentSchema>;

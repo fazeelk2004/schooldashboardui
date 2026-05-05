@@ -2,6 +2,7 @@ import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
+import TableSort from "@/components/TableSort";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { Prisma, School } from "@prisma/client";
@@ -66,7 +67,7 @@ const SchoolListPage = async ({
   const renderRow = (item: SchoolList) => (
     <tr
       key={item.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+      className="text-sm text-ink-muted hover:bg-surface-subtle transition"
     >
       <td className="flex items-center gap-4 p-4">
         <div className="flex flex-col">
@@ -102,10 +103,13 @@ const SchoolListPage = async ({
 
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
-      if (value !== undefined) {
+      if (value !== undefined && value !== "") {
         switch (key) {
           case "search":
-            query.name = { contains: value, mode: "insensitive" };
+            query.OR = [
+              { name: { contains: value, mode: "insensitive" } },
+              { address: { contains: value, mode: "insensitive" } },
+            ];
             break;
           default:
             break;
@@ -113,6 +117,16 @@ const SchoolListPage = async ({
       }
     }
   }
+
+  const order = (queryParams.order as "asc" | "desc") ?? "asc";
+  const sortMap: Record<string, Prisma.SchoolOrderByWithRelationInput> = {
+    name: { name: order },
+    createdAt: { createdAt: order },
+  };
+  const orderBy =
+    queryParams.sort && sortMap[queryParams.sort]
+      ? sortMap[queryParams.sort]
+      : { name: "asc" as const };
 
   const [data, count] = await prisma.$transaction([
     prisma.school.findMany({
@@ -126,6 +140,7 @@ const SchoolListPage = async ({
           },
         },
       },
+      orderBy,
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),
     }),
@@ -133,19 +148,19 @@ const SchoolListPage = async ({
   ]);
 
   return (
-    <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
+    <div className="m-4 mt-0 flex-1 rounded-2xl border border-line bg-surface p-6 shadow-soft">
       {/* TOP */}
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold">All Schools</h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/filter.png" alt="" width={14} height={14} />
-            </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/sort.png" alt="" width={14} height={14} />
-            </button>
+            <TableSort
+              options={[
+                { value: "name", label: "School name" },
+                { value: "createdAt", label: "Date added" },
+              ]}
+            />
             {role === "superadmin" && (
               <FormContainer table="school" type="create" />
             )}

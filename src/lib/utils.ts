@@ -1,19 +1,23 @@
-// IT APPEARS THAT BIG CALENDAR SHOWS THE LAST WEEK WHEN THE CURRENT DAY IS A WEEKEND.
-// FOR THIS REASON WE'LL GET THE LAST WEEK AS THE REFERENCE WEEK.
-// IN THE TUTORIAL WE'RE TAKING THE NEXT WEEK AS THE REFERENCE WEEK.
-
 const getLatestMonday = (): Date => {
   const today = new Date();
   const dayOfWeek = today.getDay();
-  const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-  const latestMonday = today;
-  latestMonday.setDate(today.getDate() - daysSinceMonday);
-  return latestMonday;
+
+  // Sunday = 0, Monday = 1, Tuesday = 2, etc.
+  // If today is Sunday, latest Monday was 6 days ago.
+  const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + diffToMonday);
+  monday.setHours(0, 0, 0, 0);
+
+  return monday;
 };
 
-export const adjustScheduleToCurrentWeek = (
-  lessons: { title: string; start: Date; end: Date }[]
-): { title: string; start: Date; end: Date }[] => {
+export const adjustScheduleToCurrentWeek = <
+  T extends { title: string; start: Date; end: Date }
+>(
+  lessons: T[]
+): T[] => {
   const latestMonday = getLatestMonday();
 
   return lessons.map((lesson) => {
@@ -22,13 +26,13 @@ export const adjustScheduleToCurrentWeek = (
     const daysFromMonday = lessonDayOfWeek === 0 ? 6 : lessonDayOfWeek - 1;
 
     const adjustedStartDate = new Date(latestMonday);
-
     adjustedStartDate.setDate(latestMonday.getDate() + daysFromMonday);
     adjustedStartDate.setHours(
       lesson.start.getHours(),
       lesson.start.getMinutes(),
       lesson.start.getSeconds()
     );
+
     const adjustedEndDate = new Date(adjustedStartDate);
     adjustedEndDate.setHours(
       lesson.end.getHours(),
@@ -37,7 +41,7 @@ export const adjustScheduleToCurrentWeek = (
     );
 
     return {
-      title: lesson.title,
+      ...lesson,
       start: adjustedStartDate,
       end: adjustedEndDate,
     };
@@ -60,4 +64,12 @@ export function getCurrentUser() {
 /** Returns a Prisma `where` fragment: { schoolId } for school-scoped users, or {} for superadmin */
 export function schoolFilter(schoolId: number | undefined) {
   return schoolId ? { schoolId } : {};
+}
+
+/** YYYY-MM-DD in the machine's local timezone (not UTC), so the date follows the PC clock. */
+export function getLocalDateStr(d: Date = new Date()): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }

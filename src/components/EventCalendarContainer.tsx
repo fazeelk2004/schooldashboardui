@@ -1,4 +1,3 @@
-import Image from "next/image";
 import EventCalendar from "./EventCalendar";
 import EventList from "./EventList";
 
@@ -9,13 +8,12 @@ const EventCalendarContainer = async ({
 }) => {
   const { date } = searchParams;
   return (
-    <div className="bg-white p-4 rounded-md">
+    <div className="rounded-2xl border border-line bg-surface p-5 shadow-soft">
       <EventCalendar />
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold my-4">Events</h1>
-        <Image src="/moreDark.png" alt="" width={20} height={20} />
+      <div className="mt-5 flex items-center justify-between">
+        <h2 className="text-base font-semibold text-ink">Upcoming Events</h2>
       </div>
-      <div className="flex flex-col gap-4">
+      <div className="mt-3 flex flex-col gap-3">
         <EventList dateParam={date} />
       </div>
     </div>
