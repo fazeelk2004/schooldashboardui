@@ -13,7 +13,7 @@ export default function OnboardingSuccessPage({
       <div className="panel panel-pad max-w-md w-full text-center">
         <h1 className="text-2xl font-semibold">Payment received</h1>
         <p className="text-sm text-ink-muted mt-2">
-          We're setting up your school. This usually takes a few seconds.
+          We&apos;re setting up your school. This usually takes a few seconds.
         </p>
 
         {sessionId ? (

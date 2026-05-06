@@ -54,7 +54,7 @@ export default function SuccessPoller({ sessionId }: { sessionId: string }) {
     return (
       <div className="mt-6 text-sm text-red-500">
         Provisioning is taking longer than expected. Please contact support if
-        you don't receive access shortly.
+        you don&apos;t receive access shortly.
       </div>
     );
   }

@@ -67,7 +67,7 @@ export default function OnboardingForm({ plan }: { plan: PlanKey }) {
           Admin account
         </h2>
         <p className="text-xs text-ink-subtle mt-1">
-          You'll use these credentials to sign in once payment is complete.
+          You&apos;ll use these credentials to sign in once payment is complete.
         </p>
       </div>
 
