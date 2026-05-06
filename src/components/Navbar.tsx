@@ -1,9 +1,9 @@
-import { UserButton } from "@clerk/nextjs";
 import { currentUser } from "@clerk/nextjs/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/utils";
 import NotificationBell, { NotificationItem } from "./NotificationBell";
 import NavbarSearch from "./NavbarSearch";
+import UserMenu from "./UserMenu";
 
 const Navbar = async () => {
   const user = await currentUser();
@@ -45,14 +45,7 @@ const Navbar = async () => {
           </span>
         </div>
 
-        <UserButton
-          afterSignOutUrl="/"
-          appearance={{
-            elements: {
-              avatarBox: "h-9 w-9 ring-1 ring-line",
-            },
-          }}
-        />
+        <UserMenu role={user?.publicMetadata?.role as string | undefined} />
       </div>
     </header>
   );

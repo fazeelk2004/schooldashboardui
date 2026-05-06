@@ -54,8 +54,13 @@ const provisionFromSession = async (session: Stripe.Checkout.Session) => {
   if (subscriptionId) {
     stripeSub = await stripe.subscriptions.retrieve(subscriptionId);
   }
-  const priceId = stripeSub?.items.data[0]?.price.id ?? null;
+  const firstItem = stripeSub?.items.data[0];
+  const priceId = firstItem?.price.id ?? null;
   const plan = (planFromPriceId(priceId) ?? pending.plan) as PlanKey;
+  const periodEndUnix =
+    (firstItem as any)?.current_period_end ??
+    (stripeSub as any)?.current_period_end ??
+    null;
 
   if (subscriptionId) {
     const dup = await prisma.subscription.findUnique({
@@ -104,9 +109,7 @@ const provisionFromSession = async (session: Stripe.Checkout.Session) => {
           stripeCustomerId: customerId ?? null,
           stripeSubscriptionId: subscriptionId ?? null,
           stripePriceId: priceId,
-          currentPeriodEnd: stripeSub?.current_period_end
-            ? new Date(stripeSub.current_period_end * 1000)
-            : null,
+          currentPeriodEnd: periodEndUnix ? new Date(periodEndUnix * 1000) : null,
           cancelAtPeriodEnd: stripeSub?.cancel_at_period_end ?? false,
         },
       });
@@ -126,12 +129,18 @@ const provisionFromSession = async (session: Stripe.Checkout.Session) => {
 };
 
 const updateSubscriptionRecord = async (sub: Stripe.Subscription) => {
-  const priceId = sub.items.data[0]?.price.id ?? null;
+  const firstItem = sub.items.data[0];
+  const priceId = firstItem?.price.id ?? null;
   const plan = planFromPriceId(priceId);
   const existing = await prisma.subscription.findUnique({
     where: { stripeSubscriptionId: sub.id },
   });
   if (!existing) return;
+
+  const periodEndUnix =
+    (firstItem as any)?.current_period_end ??
+    (sub as any)?.current_period_end ??
+    null;
 
   await prisma.subscription.update({
     where: { stripeSubscriptionId: sub.id },
@@ -139,9 +148,7 @@ const updateSubscriptionRecord = async (sub: Stripe.Subscription) => {
       status: sub.status.toUpperCase() as any,
       stripePriceId: priceId,
       plan: (plan ?? existing.plan) as any,
-      currentPeriodEnd: sub.current_period_end
-        ? new Date(sub.current_period_end * 1000)
-        : null,
+      currentPeriodEnd: periodEndUnix ? new Date(periodEndUnix * 1000) : null,
       cancelAtPeriodEnd: sub.cancel_at_period_end,
     },
   });
