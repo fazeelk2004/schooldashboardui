@@ -164,7 +164,9 @@ export const assertWithinLimit = async (
   const limit = features[limitKey];
   if (!Number.isFinite(limit)) return;
 
-  const count = await (prisma[resource] as any).count({ where: { schoolId } });
+  const modelKey =
+    resource === "admins" ? "admin" : resource === "teachers" ? "teacher" : "student";
+  const count = await (prisma as any)[modelKey].count({ where: { schoolId } });
   if (count >= limit) {
     throw new PlanLimitError(
       `Your ${plan} plan allows up to ${limit} ${resource}. Please upgrade to add more.`
