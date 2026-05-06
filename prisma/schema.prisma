@@ -21,8 +21,10 @@ model School {
   website     String?
   img         String?
   description String?
+  plan        Plan     @default(FREE)
   createdAt   DateTime @default(now())
 
+  subscription     Subscription?
   admins           Admin[]
   teachers         Teacher[]
   students         Student[]
@@ -354,6 +356,44 @@ model Notification {
 
   @@index([userId, read])
   @@index([userId, createdAt])
+}
+
+model Subscription {
+  id                   Int                @id @default(autoincrement())
+  schoolId             Int                @unique
+  school               School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  plan                 Plan
+  status               SubscriptionStatus @default(ACTIVE)
+  stripeCustomerId     String?            @unique
+  stripeSubscriptionId String?            @unique
+  stripePriceId        String?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+}
+
+model PendingSignup {
+  id        String   @id @default(cuid())
+  plan      Plan
+  payload   Json
+  email     String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+enum Plan {
+  FREE
+  PLUS
+  PRO
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+  TRIALING
 }
 
 enum NotificationType {

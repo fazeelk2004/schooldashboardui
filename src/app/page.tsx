@@ -71,6 +71,9 @@ export default function HomePage() {
 
           <div className="flex items-center gap-3">
             <HomeThemeToggle />
+            <Link href="/pricing" className="btn-ghost">
+              Pricing
+            </Link>
             <Link href="/sign-in" className="btn-primary">
               Login
             </Link>
@@ -91,7 +94,7 @@ export default function HomePage() {
           and parents. AI-powered. Fully dark-mode native.
         </p>
         <div className="mt-10 flex items-center justify-center gap-3">
-          <Link href="/sign-in" className="btn-primary px-6 py-3 text-sm">
+          <Link href="/pricing" className="btn-primary px-6 py-3 text-sm">
             Get started
           </Link>
           <a href="#features" className="btn-ghost px-6 py-3 text-sm">

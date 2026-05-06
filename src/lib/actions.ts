@@ -21,6 +21,7 @@ import {
 import prisma from "./prisma";
 import { clerkClient } from "@clerk/nextjs/server";
 import { getCurrentUser, getLocalDateStr } from "./utils";
+import { assertWithinLimit, PlanLimitError } from "./plans";
 
 type CurrentState = { success: boolean; error: boolean };
 
@@ -413,6 +414,7 @@ export const createTeacher = async (
   data: TeacherSchema
 ) => {
   try {
+    await assertWithinLimit(data.schoolId, "teachers");
     const user = await clerkClient.users.createUser({
       username: data.username,
       password: data.password,
@@ -528,6 +530,7 @@ export const createStudent = async (
 ) => {
   console.log(data);
   try {
+    await assertWithinLimit(data.schoolId, "students");
     const classItem = await prisma.class.findUnique({
       where: { id: data.classId },
       include: { _count: { select: { students: true } } },
@@ -741,6 +744,7 @@ export const createAdmin = async (
   data: AdminSchema
 ) => {
   try {
+    await assertWithinLimit(data.schoolId, "admins");
     const user = await clerkClient().users.createUser({
       username: data.username,
       password: data.password,

@@ -7,7 +7,19 @@ const matchers = Object.keys(routeAccessMap).map((route) => ({
   allowedRoles: routeAccessMap[route],
 }));
 
+const isPublicRoute = createRouteMatcher([
+  "/",
+  "/pricing",
+  "/onboarding(.*)",
+  "/sign-in(.*)",
+  "/api/stripe/checkout",
+  "/api/stripe/webhook",
+  "/api/stripe/provision-status",
+]);
+
 export default clerkMiddleware((auth, req) => {
+  if (isPublicRoute(req)) return;
+
   const { sessionClaims } = auth();
 
   const role = (sessionClaims?.metadata as { role?: string })?.role;

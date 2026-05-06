@@ -3,6 +3,8 @@ import { promises as fs } from "fs";
 import path from "path";
 import os from "os";
 import OpenAI from "openai";
+import { auth } from "@clerk/nextjs/server";
+import { assertFeature, PlanLimitError } from "@/lib/plans";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -89,6 +91,20 @@ export async function POST(req: NextRequest) {
   let tempPath: string | null = null;
 
   try {
+    const { sessionClaims } = auth();
+    const schoolId = (sessionClaims?.metadata as { schoolId?: number })?.schoolId;
+    if (!schoolId) {
+      return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+    }
+    try {
+      await assertFeature(schoolId, "aiQuiz");
+    } catch (e) {
+      if (e instanceof PlanLimitError) {
+        return NextResponse.json({ error: e.message }, { status: 402 });
+      }
+      throw e;
+    }
+
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
     if (!file) return NextResponse.json({ error: "No file uploaded." }, { status: 400 });
