@@ -113,9 +113,10 @@ const EventListPage = async ({
 
   const query: Prisma.EventWhereInput = {};
 
-  // School scoping
-  if (role !== "superadmin" && schoolId) {
-    query.schoolId = schoolId;
+  // School scoping — non-superadmins are restricted to their own school.
+  // If they have no schoolId, default-deny by matching an impossible id.
+  if (role !== "superadmin") {
+    query.schoolId = schoolId ?? -1;
   }
 
   if (queryParams) {
@@ -176,7 +177,7 @@ const EventListPage = async ({
     }),
     prisma.event.count({ where: query }),
     prisma.class.findMany({
-      where: role !== "superadmin" && schoolId ? { schoolId } : {},
+      where: role !== "superadmin" ? { schoolId: schoolId ?? -1 } : {},
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),

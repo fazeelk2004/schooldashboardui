@@ -6,7 +6,7 @@ import { getCurrentUser } from "@/lib/utils";
 const CountChartContainer = async () => {
   const { role, schoolId } = getCurrentUser();
 
-  const whereClause = role !== "superadmin" && schoolId ? { schoolId } : {};
+  const whereClause = role !== "superadmin" ? { schoolId: schoolId ?? -1 } : {};
 
   const data = await prisma.student.groupBy({
     by: ["sex"],

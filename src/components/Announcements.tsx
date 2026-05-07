@@ -15,7 +15,7 @@ const Announcements = async () => {
     orderBy: { date: "desc" },
     where: {
       // School scoping for non-superadmin
-      ...(role !== "superadmin" && schoolId ? { schoolId } : {}),
+      ...(role !== "superadmin" ? { schoolId: schoolId ?? -1 } : {}),
       // Role-based filtering for non-admin/non-superadmin
       ...(role !== "admin" && role !== "superadmin" && {
         OR: [

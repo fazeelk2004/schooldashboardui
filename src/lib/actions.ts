@@ -420,7 +420,7 @@ export const createTeacher = async (
       password: data.password,
       firstName: data.name,
       lastName: data.surname,
-      publicMetadata:{role:"teacher"}
+      publicMetadata:{role:"teacher", schoolId: data.schoolId}
     });
 
     await prisma.teacher.create({
@@ -466,6 +466,7 @@ export const updateTeacher = async (
       ...(data.password !== "" && { password: data.password }),
       firstName: data.name,
       lastName: data.surname,
+      publicMetadata: { role: "teacher", schoolId: data.schoolId },
     });
 
     await prisma.teacher.update({
@@ -545,7 +546,7 @@ export const createStudent = async (
       password: data.password,
       firstName: data.name,
       lastName: data.surname,
-      publicMetadata:{role:"student"}
+      publicMetadata:{role:"student", schoolId: data.schoolId}
     });
 
     await (prisma.student.create as any)({
@@ -597,6 +598,7 @@ export const updateStudent = async (
       ...(data.password !== "" && { password: data.password }),
       firstName: data.name,
       lastName: data.surname,
+      publicMetadata: { role: "student", schoolId: data.schoolId },
     });
 
     await prisma.student.update({
@@ -1131,6 +1133,23 @@ export const createEvent = async (
   data: EventSchema
 ) => {
   try {
+    const { role, schoolId: currentSchoolId } = getCurrentUser();
+    const effectiveSchoolId =
+      role === "superadmin" ? data.schoolId : currentSchoolId;
+    if (!effectiveSchoolId) {
+      return { success: false, error: true };
+    }
+
+    if (data.classId) {
+      const cls = await prisma.class.findUnique({
+        where: { id: data.classId },
+        select: { schoolId: true },
+      });
+      if (!cls || cls.schoolId !== effectiveSchoolId) {
+        return { success: false, error: true };
+      }
+    }
+
     await prisma.event.create({
       data: {
         title: data.title,
@@ -1138,7 +1157,7 @@ export const createEvent = async (
         startTime: data.startTime,
         endTime: data.endTime,
         classId: data.classId || null,
-        schoolId: data.schoolId,
+        schoolId: effectiveSchoolId,
       },
     });
     return { success: true, error: false };
@@ -1153,6 +1172,29 @@ export const updateEvent = async (
   data: EventSchema
 ) => {
   try {
+    const { role, schoolId: currentSchoolId } = getCurrentUser();
+    const existing = await prisma.event.findUnique({
+      where: { id: data.id! },
+      select: { schoolId: true },
+    });
+    if (!existing) return { success: false, error: true };
+    if (role !== "superadmin" && existing.schoolId !== currentSchoolId) {
+      return { success: false, error: true };
+    }
+
+    const effectiveSchoolId =
+      role === "superadmin" ? data.schoolId : currentSchoolId!;
+
+    if (data.classId) {
+      const cls = await prisma.class.findUnique({
+        where: { id: data.classId },
+        select: { schoolId: true },
+      });
+      if (!cls || cls.schoolId !== effectiveSchoolId) {
+        return { success: false, error: true };
+      }
+    }
+
     await prisma.event.update({
       where: { id: data.id! },
       data: {
@@ -1161,7 +1203,7 @@ export const updateEvent = async (
         startTime: data.startTime,
         endTime: data.endTime,
         classId: data.classId || null,
-        schoolId: data.schoolId,
+        schoolId: effectiveSchoolId,
       },
     });
     return { success: true, error: false };
@@ -1177,6 +1219,15 @@ export const deleteEvent = async (
 ) => {
   const id = data.get("id") as string;
   try {
+    const { role, schoolId: currentSchoolId } = getCurrentUser();
+    const existing = await prisma.event.findUnique({
+      where: { id: parseInt(id) },
+      select: { schoolId: true },
+    });
+    if (!existing) return { success: false, error: true };
+    if (role !== "superadmin" && existing.schoolId !== currentSchoolId) {
+      return { success: false, error: true };
+    }
     await prisma.event.delete({ where: { id: parseInt(id) } });
     return { success: true, error: false };
   } catch (err) {

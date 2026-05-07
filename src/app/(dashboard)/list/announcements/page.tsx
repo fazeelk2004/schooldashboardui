@@ -89,8 +89,8 @@ const AnnouncementListPage = async ({
   const query: Prisma.AnnouncementWhereInput = {};
 
   // School scoping
-  if (role !== "superadmin" && schoolId) {
-    query.schoolId = schoolId;
+  if (role !== "superadmin") {
+    query.schoolId = schoolId ?? -1;
   }
 
   if (queryParams) {
@@ -135,7 +135,7 @@ const AnnouncementListPage = async ({
     ...(queryParams.sort === "date" || !queryParams.sort ? { date: order } : {}),
   };
 
-  const [data, count, classesForFilter] = await prisma.$transaction([
+  const [data, count, classesForFilter] = await Promise.all([
     prisma.announcement.findMany({
       where: query,
       include: {
@@ -148,7 +148,7 @@ const AnnouncementListPage = async ({
     }),
     prisma.announcement.count({ where: query }),
     prisma.class.findMany({
-      where: role !== "superadmin" && schoolId ? { schoolId } : {},
+      where: role !== "superadmin" ? { schoolId: schoolId ?? -1 } : {},
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),

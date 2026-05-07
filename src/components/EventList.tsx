@@ -12,8 +12,8 @@ const EventList = async ({ dateParam }: { dateParam: string | undefined }) => {
         gte: new Date(date.setHours(0, 0, 0, 0)),
         lte: new Date(date.setHours(23, 59, 59, 999)),
       },
-      // School scoping for non-superadmin
-      ...(role !== "superadmin" && schoolId ? { schoolId } : {}),
+      // School scoping for non-superadmin (default-deny if no schoolId)
+      ...(role !== "superadmin" ? { schoolId: schoolId ?? -1 } : {}),
     },
   });
 

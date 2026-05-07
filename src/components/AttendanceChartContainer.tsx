@@ -20,8 +20,8 @@ const AttendanceChartContainer = async () => {
         gte: lastMonday,
       },
       // scope to school through student relation
-      ...(role !== "superadmin" && schoolId
-        ? { student: { schoolId } }
+      ...(role !== "superadmin"
+        ? { student: { schoolId: schoolId ?? -1 } }
         : {}),
     },
     select: {

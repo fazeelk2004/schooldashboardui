@@ -120,8 +120,8 @@ const StudentListPage = async ({
   const query: Prisma.StudentWhereInput = {};
 
   // School scoping
-  if (role !== "superadmin" && schoolId) {
-    query.schoolId = schoolId;
+  if (role !== "superadmin") {
+    query.schoolId = schoolId ?? -1;
   }
 
   if (queryParams) {
@@ -185,12 +185,12 @@ const StudentListPage = async ({
     }),
     prisma.student.count({ where: query }),
     prisma.class.findMany({
-      where: role !== "superadmin" && schoolId ? { schoolId } : {},
+      where: role !== "superadmin" ? { schoolId: schoolId ?? -1 } : {},
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
     prisma.grade.findMany({
-      where: role !== "superadmin" && schoolId ? { schoolId } : {},
+      where: role !== "superadmin" ? { schoolId: schoolId ?? -1 } : {},
       select: { id: true, level: true },
       orderBy: { level: "asc" },
     }),

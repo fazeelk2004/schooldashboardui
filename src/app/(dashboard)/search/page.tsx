@@ -11,7 +11,7 @@ const SearchPage = async ({
 }) => {
   const q = (searchParams.q ?? "").trim();
   const { role, schoolId } = getCurrentUser();
-  const schoolFilter = role !== "superadmin" && schoolId ? { schoolId } : {};
+  const schoolFilter = role !== "superadmin" ? { schoolId: schoolId ?? -1 } : {};
 
   const empty = q.length === 0;
 

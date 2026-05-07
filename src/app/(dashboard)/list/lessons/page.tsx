@@ -96,7 +96,7 @@ const LessonListPage = async ({
   const p = page ? parseInt(page) : 1;
 
   const query: Prisma.LessonWhereInput = {};
-  if (role !== "superadmin" && schoolId) query.schoolId = schoolId;
+  if (role !== "superadmin") query.schoolId = schoolId ?? -1;
 
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
@@ -154,17 +154,17 @@ const LessonListPage = async ({
     }),
     prisma.lesson.count({ where: query }),
     prisma.class.findMany({
-      where: role !== "superadmin" && schoolId ? { schoolId } : {},
+      where: role !== "superadmin" ? { schoolId: schoolId ?? -1 } : {},
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
     prisma.teacher.findMany({
-      where: role !== "superadmin" && schoolId ? { schoolId } : {},
+      where: role !== "superadmin" ? { schoolId: schoolId ?? -1 } : {},
       select: { id: true, name: true, surname: true },
       orderBy: [{ surname: "asc" }, { name: "asc" }],
     }),
     prisma.subject.findMany({
-      where: role !== "superadmin" && schoolId ? { schoolId } : {},
+      where: role !== "superadmin" ? { schoolId: schoolId ?? -1 } : {},
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),

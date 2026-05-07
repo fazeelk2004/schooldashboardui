@@ -10,7 +10,7 @@ const UserCard = async ({
   const { role, schoolId } = getCurrentUser();
 
   // Build where clause: superadmin sees all, others see only their school
-  const whereClause = role !== "superadmin" && schoolId ? { schoolId } : {};
+  const whereClause = role !== "superadmin" ? { schoolId: schoolId ?? -1 } : {};
 
   const modelMap: Record<string, any> = {
     admin: prisma.admin,

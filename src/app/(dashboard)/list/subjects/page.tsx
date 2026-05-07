@@ -80,8 +80,8 @@ const SubjectListPage = async ({
   const query: Prisma.SubjectWhereInput = {};
 
   // School scoping
-  if (role !== "superadmin" && schoolId) {
-    query.schoolId = schoolId;
+  if (role !== "superadmin") {
+    query.schoolId = schoolId ?? -1;
   }
 
   if (queryParams) {
@@ -123,7 +123,7 @@ const SubjectListPage = async ({
     }),
     prisma.subject.count({ where: query }),
     prisma.teacher.findMany({
-      where: role !== "superadmin" && schoolId ? { schoolId } : {},
+      where: role !== "superadmin" ? { schoolId: schoolId ?? -1 } : {},
       select: { id: true, name: true, surname: true },
       orderBy: [{ surname: "asc" }, { name: "asc" }],
     }),

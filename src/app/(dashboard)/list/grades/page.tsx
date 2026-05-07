@@ -84,8 +84,8 @@ const GradeListPage = async ({
 
   const query: Prisma.GradeWhereInput = {};
 
-  if (role !== "superadmin" && schoolId) {
-    query.schoolId = schoolId;
+  if (role !== "superadmin") {
+    query.schoolId = schoolId ?? -1;
   }
 
   if (queryParams) {

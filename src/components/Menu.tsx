@@ -1,5 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import MenuClient, { MenuGroup } from "./MenuClient";
+import { getSchoolPlan, PLAN_FEATURES } from "@/lib/plans";
 
 const menuItems: MenuGroup[] = [
   {
@@ -120,7 +121,20 @@ const menuItems: MenuGroup[] = [
 const Menu = async () => {
   const user = await currentUser();
   const role = (user?.publicMetadata.role as string) ?? "";
-  return <MenuClient groups={menuItems} role={role} />;
+  const schoolId = (user?.publicMetadata as { schoolId?: number })?.schoolId;
+
+  let groups = menuItems;
+  if (schoolId) {
+    const plan = await getSchoolPlan(schoolId);
+    if (!PLAN_FEATURES[plan].aiQuiz) {
+      groups = menuItems.map((g) => ({
+        ...g,
+        items: g.items.filter((i) => i.href !== "/list/quiz-generator"),
+      }));
+    }
+  }
+
+  return <MenuClient groups={groups} role={role} />;
 };
 
 export default Menu;
