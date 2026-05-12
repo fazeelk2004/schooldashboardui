@@ -303,35 +303,43 @@ export default function QuizGeneratorClient({ teacherId, schoolId, classes }: Pr
             <div className="bg-brand-soft border border-line rounded-xl p-4 text-sm text-ink">
               ✅ Quiz &quot;<strong>{quizTitle}</strong>&quot; saved! Now assign it to a class.
             </div>
-            <div>
-              <label className="block text-xs font-medium text-ink-muted mb-1.5">Assign to Class</label>
-              <select
-                value={selectedClassId}
-                onChange={(e) => setSelectedClassId(e.target.value ? Number(e.target.value) : "")}
-                className="input-base"
-              >
-                <option value="">Select a class…</option>
-                {classes.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-ink-muted mb-1.5">Due Date</label>
-              <input
-                type="datetime-local"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="input-base"
-              />
-            </div>
-            <button
-              onClick={handleAssign}
-              disabled={assigning}
-              className="btn-primary w-full py-3 disabled:opacity-50"
-            >
-              {assigning ? "Assigning…" : "Assign to Class"}
-            </button>
+            {classes.length === 0 ? (
+              <div className="border border-line rounded-xl p-4 text-sm text-ink-subtle bg-surface-subtle">
+                You have no lessons in any class, so there are no classes to assign this quiz to.
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-xs font-medium text-ink-muted mb-1.5">Assign to Class</label>
+                  <select
+                    value={selectedClassId}
+                    onChange={(e) => setSelectedClassId(e.target.value ? Number(e.target.value) : "")}
+                    className="input-base"
+                  >
+                    <option value="">Select a class…</option>
+                    {classes.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-ink-muted mb-1.5">Due Date</label>
+                  <input
+                    type="datetime-local"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                    className="input-base"
+                  />
+                </div>
+                <button
+                  onClick={handleAssign}
+                  disabled={assigning}
+                  className="btn-primary w-full py-3 disabled:opacity-50"
+                >
+                  {assigning ? "Assigning…" : "Assign to Class"}
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>

@@ -148,7 +148,12 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
         });
         const lessonTeachers = await prisma.teacher.findMany({
           where: sf,
-          select: { id: true, name: true, surname: true },
+          select: {
+            id: true,
+            name: true,
+            surname: true,
+            subjects: { select: { id: true } },
+          },
         });
         const lessonSchools = role === "superadmin"
           ? await prisma.school.findMany({ select: { id: true, name: true } })

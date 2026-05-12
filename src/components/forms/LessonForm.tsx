@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { lessonSchema, LessonSchema } from "@/lib/formValidationSchemas";
 import { createLesson, updateLesson } from "@/lib/actions";
 import { useFormState } from "react-dom";
@@ -105,10 +105,13 @@ const LessonForm = ({
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<LessonSchema>({
     resolver: zodResolver(lessonSchema),
   });
+
+  const selectedSubjectId = useWatch({ control, name: "subjectId" });
 
   const [state, formAction] = useFormState(
     type === "create" ? createLesson : updateLesson,
@@ -155,6 +158,15 @@ const LessonForm = ({
   }, [state, router, type, setOpen]);
 
   const { subjects, classes, teachers, schools, currentSchoolId } = relatedData;
+
+  const activeSubjectId = Number(selectedSubjectId ?? data?.subjectId ?? subjects?.[0]?.id);
+
+  const filteredTeachers = useMemo(() => {
+    if (!activeSubjectId || Number.isNaN(activeSubjectId)) return [];
+    return (teachers ?? []).filter((t: { subjects?: { id: number }[] }) =>
+      t.subjects?.some((s) => s.id === activeSubjectId)
+    );
+  }, [teachers, activeSubjectId]);
 
   return (
     <form className="flex flex-col gap-6" onSubmit={onSubmit}>
@@ -277,12 +289,19 @@ const LessonForm = ({
               {...register("teacherId")}
               defaultValue={data?.teacherId}
               className={inputCls}
+              disabled={filteredTeachers.length === 0}
             >
-              {teachers?.map((t: { id: string; name: string; surname: string }) => (
-                <option key={t.id} value={t.id}>
-                  {t.name} {t.surname}
-                </option>
-              ))}
+              {filteredTeachers.length === 0 ? (
+                <option value="">No teachers for this subject</option>
+              ) : (
+                filteredTeachers.map(
+                  (t: { id: string; name: string; surname: string }) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name} {t.surname}
+                    </option>
+                  )
+                )
+              )}
             </select>
           </Field>
         </div>
