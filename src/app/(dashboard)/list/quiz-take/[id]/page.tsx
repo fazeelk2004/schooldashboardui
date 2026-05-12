@@ -13,7 +13,8 @@ type Question = {
 
 type Assignment = {
   id: number;
-  dueDate: string;
+  startTime: string;
+  endTime: string;
   quiz: {
     title: string;
     teacher: { name: string; surname: string };
@@ -78,6 +79,25 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
       /* swallow — already locked client-side */
     }
   }, []);
+
+  useEffect(() => {
+    if (loading || submitted || locked) return;
+    if (!assignment) return;
+
+    const endMs = new Date(assignment.endTime).getTime();
+    const remaining = endMs - Date.now();
+    if (remaining <= 0) {
+      // Window already closed — auto-submit so the attempt is recorded.
+      handleSubmit();
+      return;
+    }
+    const timer = setTimeout(() => {
+      toast.info("Time's up — submitting your quiz.");
+      handleSubmit();
+    }, remaining);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, submitted, locked, assignment]);
 
   useEffect(() => {
     if (loading || submitted || locked) return;

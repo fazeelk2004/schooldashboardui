@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { clerkClient } from "@clerk/nextjs/server";
 import { planFromPriceId, PlanKey } from "@/lib/plans";
+import { attachSubscriptionToExistingSchool } from "@/lib/stripe-provisioning";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,6 +24,10 @@ type AdminDraft = {
 };
 
 const provisionFromSession = async (session: Stripe.Checkout.Session) => {
+  if (await attachSubscriptionToExistingSchool(session)) {
+    return;
+  }
+
   const pendingId = session.metadata?.pendingSignupId;
   if (!pendingId) {
     console.warn("[webhook] checkout.session.completed missing pendingSignupId");

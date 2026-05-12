@@ -31,13 +31,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Quiz already submitted" }, { status: 409 });
     }
 
-    // Get the quizId from the assignment
+    // Get the quizId and time window from the assignment
     const assignment = await (prisma as any).quizAssignment.findUnique({
       where: { id: quizAssignmentId },
-      select: { quizId: true },
+      select: { quizId: true, startTime: true, endTime: true },
     });
     if (!assignment) {
       return NextResponse.json({ error: "Quiz assignment not found" }, { status: 404 });
+    }
+
+    const now = new Date();
+    if (now < new Date(assignment.startTime)) {
+      return NextResponse.json(
+        { error: "This quiz is not available yet." },
+        { status: 403 }
+      );
+    }
+    if (now > new Date(assignment.endTime)) {
+      return NextResponse.json(
+        { error: "This quiz is closed. The submission window has ended." },
+        { status: 403 }
+      );
     }
 
     // Fetch correct answers from DB

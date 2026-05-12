@@ -37,6 +37,12 @@ const menuItems: MenuGroup[] = [
         visible: ["superadmin", "admin", "teacher"],
       },
       {
+        icon: "/student.png",
+        label: "Signup Requests",
+        href: "/admin/signup-requests",
+        visible: ["admin"],
+      },
+      {
         icon: "/parent.png",
         label: "Parents",
         href: "/list/parents",

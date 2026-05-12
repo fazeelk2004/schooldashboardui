@@ -3,6 +3,7 @@ import BigCalendarContainer from "@/components/BigCalendarContainer";
 import FormContainer from "@/components/FormContainer";
 import Performance from "@/components/Performance";
 import StudentAttendanceCard from "@/components/StudentAttendanceCard";
+import StudentSummaryReport from "@/components/StudentSummaryReport";
 import prisma from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { Class, Student } from "@prisma/client";
@@ -69,9 +70,16 @@ const SingleStudentPage = async ({
                     {student.class.name} · Grade {student.class.name.charAt(0)}
                   </p>
                 </div>
-                {role === "admin" && (
-                  <FormContainer table="student" type="update" data={student} />
-                )}
+                <div className="flex items-center gap-2">
+                  <StudentSummaryReport
+                    studentId={student.id}
+                    studentName={`${student.name} ${student.surname}`}
+                    variant="inline"
+                  />
+                  {role === "admin" && (
+                    <FormContainer table="student" type="update" data={student} />
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm mt-2">

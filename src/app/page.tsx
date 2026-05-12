@@ -74,6 +74,9 @@ export default function HomePage() {
             <Link href="/pricing" className="btn-ghost">
               Pricing
             </Link>
+            <Link href="/sign-up/student" className="btn-ghost">
+              Student Sign-Up
+            </Link>
             <Link href="/sign-in" className="btn-primary">
               Login
             </Link>
@@ -93,12 +96,15 @@ export default function HomePage() {
           One clean, fast, role-aware platform for admins, teachers, students,
           and parents. AI-powered. Fully dark-mode native.
         </p>
-        <div className="mt-10 flex items-center justify-center gap-3">
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
           <Link href="/pricing" className="btn-primary px-6 py-3 text-sm">
             Get started
           </Link>
+          <Link href="/sign-up/student" className="btn-ghost px-6 py-3 text-sm">
+            Sign up as a student →
+          </Link>
           <a href="#features" className="btn-ghost px-6 py-3 text-sm">
-            Learn more →
+            Learn more
           </a>
         </div>
       </section>

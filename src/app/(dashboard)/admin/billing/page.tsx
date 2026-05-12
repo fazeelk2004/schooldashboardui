@@ -2,15 +2,40 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { PLAN_DISPLAY, PLAN_FEATURES, PlanKey } from "@/lib/plans";
+import { stripe } from "@/lib/stripe";
+import { attachSubscriptionToExistingSchool } from "@/lib/stripe-provisioning";
 import BillingPortalButton from "./BillingPortalButton";
+import ChangePlanSection from "./ChangePlanSection";
+import SyncFromStripeButton from "./SyncFromStripeButton";
 
-export default async function AdminBillingPage() {
+export default async function AdminBillingPage({
+  searchParams,
+}: {
+  searchParams: { session_id?: string };
+}) {
   const { sessionClaims } = auth();
   const role = (sessionClaims?.metadata as { role?: string })?.role;
   const schoolId = (sessionClaims?.metadata as { schoolId?: number })?.schoolId;
 
   if (role !== "admin" || !schoolId) {
     redirect("/sign-in");
+  }
+
+  if (searchParams?.session_id) {
+    try {
+      const session = await stripe.checkout.sessions.retrieve(
+        searchParams.session_id
+      );
+      if (
+        session.metadata?.schoolId &&
+        Number(session.metadata.schoolId) === schoolId
+      ) {
+        await attachSubscriptionToExistingSchool(session);
+      }
+    } catch (err) {
+      console.error("[admin/billing] session reconcile failed", err);
+    }
+    redirect("/admin/billing");
   }
 
   const sub = await prisma.subscription.findUnique({
@@ -74,6 +99,13 @@ export default async function AdminBillingPage() {
         <div className="mt-6">
           <BillingPortalButton hasSubscription={!!sub?.stripeCustomerId} />
         </div>
+
+        <ChangePlanSection
+          currentPlan={plan}
+          hasSubscription={!!sub?.stripeSubscriptionId}
+        />
+
+        <SyncFromStripeButton />
       </div>
     </div>
   );

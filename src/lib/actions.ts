@@ -1433,25 +1433,37 @@ export const saveQuiz = async (
 export const assignQuizToClass = async (
   quizId: number,
   classId: number,
-  dueDate: Date,
+  startTime: Date,
+  endTime: Date,
   schoolId: number
 ): Promise<{ success: boolean; error: boolean; assignmentId?: number }> => {
   try {
+    if (!(startTime instanceof Date) || !(endTime instanceof Date) || isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+      return { success: false, error: true };
+    }
+    if (endTime.getTime() <= startTime.getTime()) {
+      return { success: false, error: true };
+    }
     const assignment = await prisma.quizAssignment.create({
       data: {
         quizId,
         classId,
-        dueDate,
+        startTime,
+        endTime,
         schoolId,
       },
       include: { quiz: { select: { title: true } } },
     });
 
+    const dateFmt = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" }).format(startTime);
+    const timeFmt = (d: Date) =>
+      new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
+
     await notifyStudentsOfClass(
       classId,
       schoolId,
       `New quiz: ${assignment.quiz.title}`,
-      `A new quiz is due on ${new Intl.DateTimeFormat("en-GB").format(dueDate)}.`,
+      `A new quiz is scheduled for ${dateFmt} from ${timeFmt(startTime)} to ${timeFmt(endTime)}.`,
       "QUIZ",
       "/list/my-quizzes"
     );
@@ -1477,6 +1489,200 @@ export const deleteQuiz = async (
   } catch (err) {
     console.error(err);
     return { success: false, error: true };
+  }
+};
+
+// ─── PENDING STUDENT SIGNUP ACTIONS ─────────────────────────────────
+
+export const acceptStudentSignup = async (
+  pendingId: string,
+  classId: number
+): Promise<{ success: boolean; message?: string }> => {
+  try {
+    const { userId, role, schoolId } = getCurrentUser();
+    if (role !== "admin" || !schoolId || !userId) {
+      return { success: false, message: "Unauthorized." };
+    }
+
+    const pending = await prisma.pendingStudentSignup.findUnique({
+      where: { id: pendingId },
+    });
+    if (!pending || pending.schoolId !== schoolId) {
+      return { success: false, message: "Request not found." };
+    }
+    if (pending.status !== "PENDING") {
+      return { success: false, message: "Already reviewed." };
+    }
+
+    const classItem = await prisma.class.findUnique({
+      where: { id: classId },
+      include: { _count: { select: { students: true } } },
+    });
+    if (!classItem || classItem.schoolId !== schoolId) {
+      return { success: false, message: "Invalid class." };
+    }
+    if (classItem._count.students >= classItem.capacity) {
+      return { success: false, message: "Class is full." };
+    }
+
+    const sd = pending.studentData as any;
+    if (classItem.gradeId !== sd.gradeId) {
+      return {
+        success: false,
+        message: "Selected class does not belong to the student's grade.",
+      };
+    }
+
+    try {
+      await assertWithinLimit(schoolId, "students");
+    } catch (err: any) {
+      return {
+        success: false,
+        message: err?.message ?? "Plan limit reached.",
+      };
+    }
+
+    let parentId: string | undefined;
+
+    if (pending.parentMode === "EXISTING" && pending.existingParentUsername) {
+      const parent = await prisma.parent.findFirst({
+        where: {
+          username: pending.existingParentUsername,
+          schoolId,
+        },
+        select: { id: true },
+      });
+      if (!parent) {
+        return {
+          success: false,
+          message: "Linked parent no longer exists.",
+        };
+      }
+      parentId = parent.id;
+    } else if (pending.parentMode === "NEW" && pending.parentData) {
+      const pd = pending.parentData as any;
+      const dupe = await prisma.parent.findUnique({
+        where: { username: pd.username },
+        select: { id: true },
+      });
+      if (dupe) {
+        return {
+          success: false,
+          message: "Parent username is already taken.",
+        };
+      }
+      const parentUser = await clerkClient().users.createUser({
+        username: pd.username,
+        password: pd.password,
+        firstName: pd.name,
+        lastName: pd.surname,
+        publicMetadata: { role: "parent", schoolId },
+      });
+      await prisma.parent.create({
+        data: {
+          id: parentUser.id,
+          username: pd.username,
+          name: pd.name,
+          surname: pd.surname,
+          email: pd.email || null,
+          phone: pd.phone,
+          address: pd.address,
+          schoolId,
+        },
+      });
+      parentId = parentUser.id;
+    }
+
+    const studentUser = await clerkClient().users.createUser({
+      username: sd.username,
+      password: sd.password,
+      firstName: sd.name,
+      lastName: sd.surname,
+      publicMetadata: { role: "student", schoolId },
+    });
+
+    await (prisma.student.create as any)({
+      data: {
+        id: studentUser.id,
+        username: sd.username,
+        name: sd.name,
+        surname: sd.surname,
+        email: sd.email || null,
+        phone: sd.phone || null,
+        address: sd.address,
+        img: sd.img || null,
+        bloodType: sd.bloodType,
+        sex: sd.sex,
+        birthday: new Date(sd.birthday),
+        gradeId: sd.gradeId,
+        classId,
+        ...(parentId ? { parentId } : {}),
+        schoolId,
+      },
+    });
+
+    await prisma.pendingStudentSignup.update({
+      where: { id: pendingId },
+      data: {
+        status: "ACCEPTED",
+        reviewedAt: new Date(),
+        reviewedBy: userId,
+      },
+    });
+
+    await notifyTeachersOfSchool(
+      schoolId,
+      "New student enrolled",
+      `${sd.name} ${sd.surname} has been added to the school.`,
+      "STUDENT",
+      "/list/students"
+    );
+
+    revalidatePath("/admin/signup-requests");
+    revalidatePath("/list/students");
+    return { success: true };
+  } catch (err: any) {
+    console.error("[acceptStudentSignup]", err);
+    return {
+      success: false,
+      message: err?.message ?? "Something went wrong.",
+    };
+  }
+};
+
+export const declineStudentSignup = async (
+  pendingId: string
+): Promise<{ success: boolean; message?: string }> => {
+  try {
+    const { userId, role, schoolId } = getCurrentUser();
+    if (role !== "admin" || !schoolId || !userId) {
+      return { success: false, message: "Unauthorized." };
+    }
+    const pending = await prisma.pendingStudentSignup.findUnique({
+      where: { id: pendingId },
+    });
+    if (!pending || pending.schoolId !== schoolId) {
+      return { success: false, message: "Request not found." };
+    }
+    if (pending.status !== "PENDING") {
+      return { success: false, message: "Already reviewed." };
+    }
+    await prisma.pendingStudentSignup.update({
+      where: { id: pendingId },
+      data: {
+        status: "DECLINED",
+        reviewedAt: new Date(),
+        reviewedBy: userId,
+      },
+    });
+    revalidatePath("/admin/signup-requests");
+    return { success: true };
+  } catch (err: any) {
+    console.error("[declineStudentSignup]", err);
+    return {
+      success: false,
+      message: err?.message ?? "Something went wrong.",
+    };
   }
 };
 

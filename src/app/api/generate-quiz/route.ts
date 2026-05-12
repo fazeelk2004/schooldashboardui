@@ -4,6 +4,7 @@ import path from "path";
 import os from "os";
 import OpenAI from "openai";
 import { auth } from "@clerk/nextjs/server";
+import prisma from "@/lib/prisma";
 import { assertFeature, PlanLimitError } from "@/lib/plans";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -91,10 +92,20 @@ export async function POST(req: NextRequest) {
   let tempPath: string | null = null;
 
   try {
-    const { sessionClaims } = auth();
-    const schoolId = (sessionClaims?.metadata as { schoolId?: number })?.schoolId;
-    if (!schoolId) {
+    const { userId, sessionClaims } = auth();
+    if (!userId) {
       return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+    }
+    let schoolId = (sessionClaims?.metadata as { schoolId?: number })?.schoolId;
+    if (!schoolId) {
+      const teacher = await (prisma as any).teacher.findUnique({
+        where: { id: userId },
+        select: { schoolId: true },
+      });
+      schoolId = teacher?.schoolId;
+    }
+    if (!schoolId) {
+      return NextResponse.json({ error: "No school associated with this account." }, { status: 403 });
     }
     try {
       await assertFeature(schoolId, "aiQuiz");

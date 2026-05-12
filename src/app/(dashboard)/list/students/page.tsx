@@ -1,5 +1,6 @@
 import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
+import StudentSummaryReport from "@/components/StudentSummaryReport";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import TableFilter from "@/components/TableFilter";
@@ -56,14 +57,10 @@ const StudentListPage = async ({
           },
         ]
       : []),
-    ...(role === "admin"
-      ? [
-          {
-            header: "Actions",
-            accessor: "action",
-          },
-        ]
-      : []),
+    {
+      header: "Actions",
+      accessor: "action",
+    },
   ];
 
   const renderRow = (item: StudentList) => (
@@ -100,6 +97,10 @@ const StudentListPage = async ({
               <Image src="/view.png" alt="" width={16} height={16} />
             </button>
           </Link>
+          <StudentSummaryReport
+            studentId={item.id}
+            studentName={`${item.name} ${item.surname}`}
+          />
           {role === "admin" && (
             // <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaPurple">
             //   <Image src="/delete.png" alt="" width={16} height={16} />

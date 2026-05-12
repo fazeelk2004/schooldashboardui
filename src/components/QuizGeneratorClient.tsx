@@ -32,7 +32,9 @@ export default function QuizGeneratorClient({ teacherId, schoolId, classes }: Pr
   const [saving, setSaving] = useState(false);
 
   const [selectedClassId, setSelectedClassId] = useState<number | "">("");
-  const [dueDate, setDueDate] = useState("");
+  const [quizDate, setQuizDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
   const [assigning, setAssigning] = useState(false);
 
   useEffect(() => {
@@ -93,10 +95,22 @@ export default function QuizGeneratorClient({ teacherId, schoolId, classes }: Pr
   const handleAssign = async () => {
     if (!savedQuizId) { toast.error("No saved quiz."); return; }
     if (!selectedClassId) { toast.error("Please select a class."); return; }
-    if (!dueDate) { toast.error("Please set a due date."); return; }
+    if (!quizDate) { toast.error("Please pick the quiz date."); return; }
+    if (!startTime) { toast.error("Please set a start time."); return; }
+    if (!endTime) { toast.error("Please set an end time."); return; }
+    const start = new Date(`${quizDate}T${startTime}`);
+    const end = new Date(`${quizDate}T${endTime}`);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      toast.error("Invalid date or time.");
+      return;
+    }
+    if (end <= start) {
+      toast.error("End time must be after start time.");
+      return;
+    }
     setAssigning(true);
     try {
-      const result = await assignQuizToClass(savedQuizId, Number(selectedClassId), new Date(dueDate), schoolId);
+      const result = await assignQuizToClass(savedQuizId, Number(selectedClassId), start, end, schoolId);
       if (result.success) {
         toast.success("Quiz assigned to class!");
         setStep(0);
@@ -105,7 +119,9 @@ export default function QuizGeneratorClient({ teacherId, schoolId, classes }: Pr
         setQuizTitle("");
         setSavedQuizId(null);
         setSelectedClassId("");
-        setDueDate("");
+        setQuizDate("");
+        setStartTime("");
+        setEndTime("");
       } else {
         toast.error("Failed to assign quiz.");
       }
@@ -323,14 +339,35 @@ export default function QuizGeneratorClient({ teacherId, schoolId, classes }: Pr
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-ink-muted mb-1.5">Due Date</label>
+                  <label className="block text-xs font-medium text-ink-muted mb-1.5">Quiz Date</label>
                   <input
-                    type="datetime-local"
-                    value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
+                    type="date"
+                    value={quizDate}
+                    onChange={(e) => setQuizDate(e.target.value)}
                     className="input-base"
                   />
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-ink-muted mb-1.5">Start Time</label>
+                    <input
+                      type="time"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      className="input-base"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-ink-muted mb-1.5">End Time</label>
+                    <input
+                      type="time"
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                      className="input-base"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-ink-subtle">Students can only take the quiz between the start and end times on the selected date.</p>
                 <button
                   onClick={handleAssign}
                   disabled={assigning}

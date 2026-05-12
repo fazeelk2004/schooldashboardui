@@ -35,7 +35,7 @@ export default async function MyQuizzesPage() {
         select: { id: true, score: true, totalMarks: true, submittedAt: true },
       },
     },
-    orderBy: { dueDate: "asc" },
+    orderBy: { startTime: "asc" },
   });
 
   const now = new Date();
@@ -61,7 +61,11 @@ export default async function MyQuizzesPage() {
           {quizAssignments.map((assignment: any) => {
             const submission = assignment.submissions[0];
             const isCompleted = !!submission;
-            const isOverdue = !isCompleted && new Date(assignment.dueDate) < now;
+            const startAt = new Date(assignment.startTime);
+            const endAt = new Date(assignment.endTime);
+            const notStarted = !isCompleted && now < startAt;
+            const isOverdue = !isCompleted && now > endAt;
+            const isOpen = !isCompleted && !notStarted && !isOverdue;
             const percentage = isCompleted
               ? Math.round((submission.score / submission.totalMarks) * 100)
               : null;
@@ -88,11 +92,15 @@ export default async function MyQuizzesPage() {
                     )
                   ) : isOverdue ? (
                     <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full font-medium shrink-0">
-                      Overdue
+                      Closed
+                    </span>
+                  ) : notStarted ? (
+                    <span className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full font-medium shrink-0">
+                      Not started
                     </span>
                   ) : (
                     <span className="px-2 py-0.5 bg-lamaYellow text-gray-800 text-xs rounded-full font-medium shrink-0">
-                      Pending
+                      Available
                     </span>
                   )}
                 </div>
@@ -103,11 +111,14 @@ export default async function MyQuizzesPage() {
                   </div>
                   <div>❓ {assignment.quiz._count.questions} questions</div>
                   <div className={isOverdue ? "text-red-500" : ""}>
-                    📅 Due{" "}
-                    {new Intl.DateTimeFormat("en-US", {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    }).format(new Date(assignment.dueDate))}
+                    📅{" "}
+                    {new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(startAt)}
+                  </div>
+                  <div className={isOverdue ? "text-red-500" : ""}>
+                    🕒{" "}
+                    {new Intl.DateTimeFormat("en-US", { hour: "2-digit", minute: "2-digit" }).format(startAt)}
+                    {" – "}
+                    {new Intl.DateTimeFormat("en-US", { hour: "2-digit", minute: "2-digit" }).format(endAt)}
                   </div>
                 </div>
 
@@ -134,14 +145,18 @@ export default async function MyQuizzesPage() {
                     <div className="text-center text-sm text-red-500 py-2 font-medium">
                       Submission window closed
                     </div>
-                  ) : (
+                  ) : notStarted ? (
+                    <div className="text-center text-sm text-gray-500 py-2 font-medium">
+                      Available {new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(startAt)}
+                    </div>
+                  ) : isOpen ? (
                     <Link
                       href={`/list/quiz-take/${assignment.id}`}
                       className="block text-center bg-lamaSky text-gray-800 text-sm font-semibold py-2.5 rounded-md hover:bg-lamaSky/80 transition-colors"
                     >
                       Take Quiz →
                     </Link>
-                  )}
+                  ) : null}
                 </div>
               </div>
             );

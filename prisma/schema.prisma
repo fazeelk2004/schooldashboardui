@@ -298,8 +298,9 @@ model QuizQuestion {
 }
 
 model QuizAssignment {
-  id      Int      @id @default(autoincrement())
-  dueDate DateTime
+  id        Int      @id @default(autoincrement())
+  startTime DateTime
+  endTime   DateTime
   createdAt DateTime @default(now())
 
   quizId  Int
@@ -382,6 +383,21 @@ model PendingSignup {
   expiresAt DateTime
 }
 
+model PendingStudentSignup {
+  id            String              @id @default(cuid())
+  schoolId      Int
+  status        PendingSignupStatus @default(PENDING)
+  studentData   Json
+  parentMode    ParentMode
+  parentData    Json?
+  existingParentUsername String?
+  createdAt     DateTime            @default(now())
+  reviewedAt    DateTime?
+  reviewedBy    String?
+
+  @@index([schoolId, status])
+}
+
 enum Plan {
   FREE
   PLUS
@@ -420,4 +436,16 @@ enum Day {
   WEDNESDAY
   THURSDAY
   FRIDAY
+}
+
+enum PendingSignupStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum ParentMode {
+  NEW
+  EXISTING
+  NONE
 }

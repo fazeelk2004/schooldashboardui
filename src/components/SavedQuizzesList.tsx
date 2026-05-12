@@ -21,7 +21,9 @@ type Props = {
 export default function SavedQuizzesList({ schoolId, classes, quizzes }: Props) {
   const [openQuizId, setOpenQuizId] = useState<number | null>(null);
   const [selectedClassId, setSelectedClassId] = useState<number | "">("");
-  const [dueDate, setDueDate] = useState("");
+  const [quizDate, setQuizDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
   const [assigning, setAssigning] = useState(false);
 
   const activeQuiz = useMemo(
@@ -40,20 +42,35 @@ export default function SavedQuizzesList({ schoolId, classes, quizzes }: Props) 
   const closeModal = () => {
     setOpenQuizId(null);
     setSelectedClassId("");
-    setDueDate("");
+    setQuizDate("");
+    setStartTime("");
+    setEndTime("");
   };
 
   const handleAssign = async () => {
     if (!activeQuiz) return;
     if (!selectedClassId) { toast.error("Please select a class."); return; }
     if (isAlreadyAssigned) { toast.error("This class has already been assigned this quiz."); return; }
-    if (!dueDate) { toast.error("Please set a due date."); return; }
+    if (!quizDate) { toast.error("Please pick the quiz date."); return; }
+    if (!startTime) { toast.error("Please set a start time."); return; }
+    if (!endTime) { toast.error("Please set an end time."); return; }
+    const start = new Date(`${quizDate}T${startTime}`);
+    const end = new Date(`${quizDate}T${endTime}`);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      toast.error("Invalid date or time.");
+      return;
+    }
+    if (end <= start) {
+      toast.error("End time must be after start time.");
+      return;
+    }
     setAssigning(true);
     try {
       const result = await assignQuizToClass(
         activeQuiz.id,
         Number(selectedClassId),
-        new Date(dueDate),
+        start,
+        end,
         schoolId
       );
       if (result.success) {
@@ -99,7 +116,9 @@ export default function SavedQuizzesList({ schoolId, classes, quizzes }: Props) 
                       onClick={() => {
                         setOpenQuizId(q.id);
                         setSelectedClassId("");
-                        setDueDate("");
+                        setQuizDate("");
+                        setStartTime("");
+                        setEndTime("");
                       }}
                       className="btn-primary px-3 py-1.5 text-xs"
                     >
@@ -157,14 +176,35 @@ export default function SavedQuizzesList({ schoolId, classes, quizzes }: Props) 
                     )}
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-ink-muted mb-1.5">Due Date</label>
+                    <label className="block text-xs font-medium text-ink-muted mb-1.5">Quiz Date</label>
                     <input
-                      type="datetime-local"
-                      value={dueDate}
-                      onChange={(e) => setDueDate(e.target.value)}
+                      type="date"
+                      value={quizDate}
+                      onChange={(e) => setQuizDate(e.target.value)}
                       className="input-base"
                     />
                   </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-ink-muted mb-1.5">Start Time</label>
+                      <input
+                        type="time"
+                        value={startTime}
+                        onChange={(e) => setStartTime(e.target.value)}
+                        className="input-base"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-ink-muted mb-1.5">End Time</label>
+                      <input
+                        type="time"
+                        value={endTime}
+                        onChange={(e) => setEndTime(e.target.value)}
+                        className="input-base"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-ink-subtle">Students can only take the quiz between the start and end times on the selected date.</p>
                 </>
               )}
               <div className="flex gap-3">
