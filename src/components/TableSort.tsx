@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
 
 export type SortOption = { value: string; label: string };
 
@@ -54,16 +53,16 @@ const TableSort = ({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className={`relative w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow ${
+        className={`relative flex h-10 w-10 items-center justify-center rounded-xl border border-line/80 bg-surface-muted text-ink-muted shadow-sm transition hover:border-brand/25 hover:bg-surface hover:text-brand ${
           active ? "ring-2 ring-brand/40" : ""
         }`}
         aria-label="Sort"
         aria-expanded={open}
       >
-        <Image src="/sort.png" alt="" width={14} height={14} />
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M3 6h13M3 12h9M3 18h5M18 4v16m-3-3 3 3 3-3" /></svg>
       </button>
       {open && (
-        <div className="absolute right-0 mt-2 w-56 rounded-xl border border-line bg-surface shadow-soft z-30 p-3">
+        <div className="dashboard-popover absolute right-0 z-30 mt-2 w-56 rounded-2xl border border-line bg-surface p-4 shadow-card">
           <p className="text-xs font-semibold text-ink-subtle uppercase tracking-wide mb-2">
             Sort by
           </p>

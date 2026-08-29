@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser, getLocalDateStr } from "@/lib/utils";
 import AttendanceMarker from "@/components/AttendanceMarker";
 import AttendanceViewer from "@/components/AttendanceViewer";
+import DashboardWelcome from "@/components/DashboardWelcome";
 
 const DAY_ENUM = [
   "SUNDAY",
@@ -81,20 +82,12 @@ const AttendanceListPage = async () => {
     });
 
     return (
-      <div className="p-6 flex flex-col gap-6">
-        <header className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-ink">
-              Attendance
-            </h1>
-            <p className="text-sm text-ink-muted mt-1">
-              Mark today&apos;s attendance for your active lesson.
-            </p>
-          </div>
-          <span className="text-xs font-medium text-ink-muted bg-surface-subtle border border-line rounded-full px-3 py-1.5">
-            {lessons.length} lesson{lessons.length !== 1 ? "s" : ""} today
-          </span>
-        </header>
+      <div className="dashboard-page flex flex-col gap-6 p-4 sm:p-6 lg:p-7">
+        <DashboardWelcome
+          role="Teacher · Attendance"
+          title="Keep every lesson accounted for."
+          description={`Mark today’s active lesson quickly and confidently. You have ${lessons.length} lesson${lessons.length !== 1 ? "s" : ""} scheduled today.`}
+        />
 
         {lessons.length === 0 ? (
           <EmptyState
@@ -164,24 +157,12 @@ const AttendanceListPage = async () => {
   });
 
   return (
-    <div className="p-6 flex flex-col gap-6">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-ink">
-            Attendance
-          </h1>
-          <p className="text-sm text-ink-muted mt-1">
-            {role === "parent"
-              ? "Attendance records for your children."
-              : role === "student"
-              ? "Your attendance history."
-              : "Attendance records across the school."}
-          </p>
-        </div>
-        <span className="text-xs font-medium text-ink-muted bg-surface-subtle border border-line rounded-full px-3 py-1.5">
-          View only
-        </span>
-      </header>
+    <div className="dashboard-page flex flex-col gap-6 p-4 sm:p-6 lg:p-7">
+      <DashboardWelcome
+        role={`${role ?? "School"} · Attendance`}
+        title="Attendance, made clear."
+        description={role === "parent" ? "See attendance patterns and individual lesson records for your children." : role === "student" ? "Review your attendance history and keep track of every recorded lesson." : "Review attendance records across the school with simple, focused filtering."}
+      />
 
       <AttendanceViewer
         role={role ?? ""}
@@ -201,7 +182,7 @@ const AttendanceListPage = async () => {
 };
 
 const EmptyState = ({ title, message }: { title: string; message: string }) => (
-  <div className="panel p-16 text-center">
+  <div className="dashboard-card rounded-[24px] border border-line/75 bg-surface p-16 text-center shadow-soft">
     <div className="w-12 h-12 mx-auto rounded-full bg-surface-subtle border border-line flex items-center justify-center text-ink-subtle mb-4">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
     </div>

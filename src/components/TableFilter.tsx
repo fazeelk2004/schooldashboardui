@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
 
 export type FilterField = {
   key: string;
@@ -48,13 +47,13 @@ const TableFilter = ({ fields }: { fields: FilterField[] }) => {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className={`relative w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow ${
+        className={`relative flex h-10 w-10 items-center justify-center rounded-xl border border-line/80 bg-surface-muted text-ink-muted shadow-sm transition hover:border-brand/25 hover:bg-surface hover:text-brand ${
           activeCount > 0 ? "ring-2 ring-brand/40" : ""
         }`}
         aria-label="Filter"
         aria-expanded={open}
       >
-        <Image src="/filter.png" alt="" width={14} height={14} />
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M4 5h16M7 12h10M10 19h4" /></svg>
         {activeCount > 0 && (
           <span className="absolute -top-1 -right-1 bg-brand text-white text-[10px] rounded-full min-w-4 h-4 px-1 flex items-center justify-center font-semibold">
             {activeCount}
@@ -62,7 +61,7 @@ const TableFilter = ({ fields }: { fields: FilterField[] }) => {
         )}
       </button>
       {open && (
-        <div className="absolute right-0 mt-2 w-64 rounded-xl border border-line bg-surface shadow-soft z-30 p-3">
+        <div className="dashboard-popover absolute right-0 z-30 mt-2 w-64 rounded-2xl border border-line bg-surface p-4 shadow-card">
           <p className="text-xs font-semibold text-ink-subtle uppercase tracking-wide mb-2">
             Filters
           </p>
@@ -75,7 +74,7 @@ const TableFilter = ({ fields }: { fields: FilterField[] }) => {
                 <select
                   value={searchParams.get(f.key) ?? ""}
                   onChange={(e) => setParam(f.key, e.target.value)}
-                  className="w-full text-sm rounded-md border border-line bg-surface px-2 py-1.5 text-ink focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none"
+                  className="input-base py-2"
                 >
                   <option value="">All</option>
                   {f.options.map((o) => (

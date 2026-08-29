@@ -80,7 +80,7 @@ const renderRow = (item: ResultList) => (
   >
     <td className="flex items-center gap-2 p-4">
       {item.kind === "quiz" && (
-        <span className="px-2 py-0.5 bg-lamaPurple text-gray-800 text-[10px] rounded-full font-semibold">
+        <span className="rounded-full bg-violet-500/10 px-2.5 py-1 text-[10px] font-semibold text-violet-600 dark:text-violet-300">
           QUIZ
         </span>
       )}
@@ -304,7 +304,7 @@ const renderRow = (item: ResultList) => (
   const data = merged.slice(ITEM_PER_PAGE * (p - 1), ITEM_PER_PAGE * p);
 
   return (
-    <div className="m-4 mt-0 flex-1 rounded-2xl border border-line bg-surface p-6 shadow-soft">
+    <div className="dashboard-page list-page-card m-4 mt-0 flex-1 rounded-[24px] border border-line/75 bg-surface p-4 shadow-soft sm:p-6">
       {/* TOP */}
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold">All Results</h1>

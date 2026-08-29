@@ -22,21 +22,22 @@ const InputField = ({
   inputProps,
 }: InputFieldProps) => {
   return (
-    <div className={hidden ? "hidden" : "flex flex-col gap-1.5 w-full md:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.667rem)]"}>
-      <label className="text-xs font-medium text-ink-muted">{label}</label>
+    <div className={hidden ? "hidden" : "form-field flex w-full flex-col gap-2 md:w-[calc(50%_-_0.5rem)] lg:w-[calc(33.333%_-_0.667rem)]"}>
+      <label htmlFor={`field-${name}`} className="text-[11px] font-bold uppercase tracking-[0.09em] text-ink-muted">{label}</label>
       <input
+        id={`field-${name}`}
         type={type}
         {...register(name)}
-        className={`w-full rounded-lg border bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-subtle focus:outline-none focus:ring-2 transition ${
+        className={`w-full rounded-xl border bg-surface-muted/50 px-3.5 py-2.5 text-sm font-medium text-ink shadow-sm placeholder:font-normal placeholder:text-ink-subtle transition focus:bg-surface focus:outline-none focus:ring-4 ${
           error
-            ? "border-rose-400 focus:border-rose-500 focus:ring-rose-200 dark:focus:ring-rose-900/40"
-            : "border-line focus:border-brand focus:ring-brand/20"
+            ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/10"
+            : "border-line/90 hover:border-ink-subtle/50 focus:border-brand/60 focus:ring-brand/10"
         }`}
         {...inputProps}
         defaultValue={defaultValue}
       />
       {error?.message && (
-        <p className="text-xs text-rose-500">{error.message.toString()}</p>
+        <p className="flex items-center gap-1 text-[11px] font-medium text-rose-500"><span className="h-1 w-1 rounded-full bg-current" />{error.message.toString()}</p>
       )}
     </div>
   );

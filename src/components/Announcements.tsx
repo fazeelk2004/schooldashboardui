@@ -33,10 +33,10 @@ const Announcements = async () => {
   ];
 
   return (
-    <div className="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+    <div className="dashboard-card rounded-[22px] border border-line/75 bg-surface p-5 shadow-soft">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-ink">Announcements</h2>
-        <span className="text-xs font-medium text-brand hover:underline cursor-pointer">
+        <div><span className="dashboard-section-kicker">Stay informed</span><h2 className="mt-1 text-base font-bold text-ink">Announcements</h2></div>
+        <span className="cursor-pointer text-xs font-bold text-brand hover:underline">
           View all
         </span>
       </div>
@@ -49,7 +49,7 @@ const Announcements = async () => {
         {data.map((a, i) => (
           <div
             key={a.id}
-            className={`rounded-xl border border-line bg-surface-muted p-4 border-l-4 ${
+            className={`announcement-item rounded-2xl border border-line/70 bg-surface-muted/60 p-4 border-l-[3px] ${
               accents[i % accents.length]
             }`}
           >

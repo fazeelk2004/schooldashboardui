@@ -132,9 +132,9 @@ const AttendanceMarker = ({
   const absentCount = students.length - presentCount;
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="attendance-workspace flex flex-col gap-5">
       {/* Controls */}
-      <div className="panel p-5 flex flex-wrap gap-5 items-end">
+      <div className="dashboard-card flex flex-wrap items-end gap-5 rounded-[22px] border border-line/75 bg-surface p-5 shadow-soft">
         <div className="flex flex-col gap-1.5 min-w-[260px]">
           <label className="text-[11px] font-medium text-ink-subtle uppercase tracking-wider">
             Lesson
@@ -197,7 +197,7 @@ const AttendanceMarker = ({
 
       {/* Stats */}
       {students.length > 0 && (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-3 sm:gap-4">
           <StatCard label="Present" value={presentCount} tone="green" />
           <StatCard label="Absent" value={absentCount} tone="red" />
           <StatCard label="Total" value={students.length} tone="neutral" />
@@ -225,7 +225,7 @@ const AttendanceMarker = ({
       )}
 
       {/* Student List */}
-      <div className="panel overflow-hidden">
+      <div className="dashboard-card overflow-hidden rounded-[22px] border border-line/75 bg-surface shadow-soft">
         {students.length === 0 ? (
           <div className="p-12 text-center text-ink-subtle text-sm">
             No students found for this lesson.
@@ -233,7 +233,7 @@ const AttendanceMarker = ({
         ) : (
           <table className="w-full">
             <thead>
-              <tr className="border-b border-line">
+              <tr className="border-b border-line/70 bg-surface-muted/65">
                 <th className="px-5 py-3.5 text-left text-[11px] font-semibold text-ink-subtle uppercase tracking-wider w-12">
                   #
                 </th>
@@ -249,11 +249,11 @@ const AttendanceMarker = ({
               {students.map((student, idx) => {
                 const isPresent = attendance[student.id] ?? true;
                 return (
-                  <tr key={student.id} className="hover:bg-surface-subtle transition-colors">
+                  <tr key={student.id} className="attendance-row hover:bg-brand/[0.035] transition-colors">
                     <td className="px-5 py-3.5 text-sm text-ink-subtle">{idx + 1}</td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-surface-subtle text-ink-muted flex items-center justify-center text-xs font-semibold">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-line/70 bg-surface-muted text-xs font-bold text-ink-muted">
                           {student.name[0]}
                           {student.surname[0]}
                         </div>
@@ -287,7 +287,7 @@ const AttendanceMarker = ({
           <button
             onClick={handleSubmit}
             disabled={isPending || !canEdit}
-            className="btn-primary px-6 py-2.5 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="btn-primary gap-2 px-6 py-3 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {isPending ? "Saving…" : "Save attendance"}
           </button>
@@ -351,7 +351,8 @@ const StatCard = ({
     neutral: "text-ink",
   }[tone];
   return (
-    <div className="panel px-5 py-4">
+    <div className="attendance-stat dashboard-card relative overflow-hidden rounded-2xl border border-line/75 bg-surface px-4 py-4 shadow-soft sm:px-5">
+      <span className={`absolute inset-x-0 top-0 h-0.5 ${tone === "green" ? "bg-emerald-500" : tone === "red" ? "bg-rose-500" : "bg-brand"}`} />
       <div className={`text-2xl font-semibold ${toneClasses}`}>{value}</div>
       <div className="text-[11px] text-ink-subtle font-medium uppercase tracking-wider mt-1">
         {label}
@@ -369,13 +370,13 @@ const Toggle = ({
   onChange: (v: boolean) => void;
   disabled?: boolean;
 }) => (
-  <div className="inline-flex bg-surface-subtle rounded-full p-0.5 text-xs font-medium">
+  <div className="inline-flex rounded-xl border border-line/70 bg-surface-muted p-1 text-xs font-semibold shadow-inner">
     <button
       type="button"
       disabled={disabled}
       onClick={() => onChange(true)}
-      className={`px-3 py-1 rounded-full transition ${
-        value ? "bg-surface text-green-600 dark:text-green-400 shadow-sm" : "text-ink-subtle"
+      className={`rounded-lg px-3 py-1.5 transition ${
+        value ? "bg-emerald-500 text-white shadow-sm" : "text-ink-subtle"
       } disabled:cursor-not-allowed`}
     >
       Present
@@ -384,8 +385,8 @@ const Toggle = ({
       type="button"
       disabled={disabled}
       onClick={() => onChange(false)}
-      className={`px-3 py-1 rounded-full transition ${
-        !value ? "bg-surface text-red-500 dark:text-red-400 shadow-sm" : "text-ink-subtle"
+      className={`rounded-lg px-3 py-1.5 transition ${
+        !value ? "bg-rose-500 text-white shadow-sm" : "text-ink-subtle"
       } disabled:cursor-not-allowed`}
     >
       Absent

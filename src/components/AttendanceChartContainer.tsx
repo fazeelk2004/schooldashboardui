@@ -1,4 +1,3 @@
-import Image from "next/image";
 import AttendanceChart from "./AttendanceChart";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/utils";
@@ -63,11 +62,12 @@ const AttendanceChartContainer = async () => {
   }));
 
   return (
-    <div className="h-full rounded-2xl border border-line bg-surface p-5 shadow-soft">
+    <div className="dashboard-card h-full rounded-[22px] border border-line/75 bg-surface p-5 shadow-soft">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-semibold text-ink">Attendance</h2>
-          <p className="text-xs text-ink-subtle">This week</p>
+          <span className="dashboard-section-kicker">Weekly pulse</span>
+          <h2 className="mt-1 text-base font-bold text-ink">Attendance</h2>
+          <p className="text-xs text-ink-subtle">Present and absent this week</p>
         </div>
       </div>
       <AttendanceChart data={data} />

@@ -36,7 +36,7 @@ const Pagination = ({ page, count }: { page: number; count: number }) => {
   }
 
   return (
-    <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+    <div className="mt-5 flex flex-col items-center justify-between gap-3 border-t border-line/70 pt-4 sm:flex-row">
       <p className="text-xs text-ink-subtle">
         Showing <span className="font-medium text-ink">{start}</span>–
         <span className="font-medium text-ink">{end}</span> of{" "}
@@ -47,7 +47,7 @@ const Pagination = ({ page, count }: { page: number; count: number }) => {
         <button
           disabled={!hasPrev}
           onClick={() => changePage(page - 1)}
-          className="rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-medium text-ink-muted hover:bg-surface-subtle disabled:opacity-40 disabled:cursor-not-allowed transition"
+          className="rounded-lg border border-line bg-surface px-3.5 py-2 text-xs font-semibold text-ink-muted transition hover:border-brand/20 hover:bg-surface-subtle disabled:cursor-not-allowed disabled:opacity-40"
         >
           Prev
         </button>
@@ -63,7 +63,7 @@ const Pagination = ({ page, count }: { page: number; count: number }) => {
             <button
               key={p}
               onClick={() => changePage(p)}
-              className={`min-w-[32px] rounded-lg px-2 py-1.5 text-xs font-medium transition ${
+              className={`min-w-[34px] rounded-lg px-2 py-2 text-xs font-semibold transition ${
                 page === p
                   ? "bg-brand text-white"
                   : "border border-line bg-surface text-ink-muted hover:bg-surface-subtle"
@@ -76,7 +76,7 @@ const Pagination = ({ page, count }: { page: number; count: number }) => {
         <button
           disabled={!hasNext}
           onClick={() => changePage(page + 1)}
-          className="rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-medium text-ink-muted hover:bg-surface-subtle disabled:opacity-40 disabled:cursor-not-allowed transition"
+          className="rounded-lg border border-line bg-surface px-3.5 py-2 text-xs font-semibold text-ink-muted transition hover:border-brand/20 hover:bg-surface-subtle disabled:cursor-not-allowed disabled:opacity-40"
         >
           Next
         </button>

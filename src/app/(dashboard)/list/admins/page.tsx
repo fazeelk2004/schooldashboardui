@@ -52,7 +52,7 @@ const AdminListPage = async ({
       </td>
       <td>{item.username}</td>
       <td>
-        <span className="text-xs bg-lamaSkyLight px-2 py-1 rounded">
+        <span className="rounded-full bg-brand/10 px-2.5 py-1 text-xs font-semibold text-brand">
           {item.school?.name}
         </span>
       </td>
@@ -116,7 +116,7 @@ const AdminListPage = async ({
   ]);
 
   return (
-    <div className="m-4 mt-0 flex-1 rounded-2xl border border-line bg-surface p-6 shadow-soft">
+    <div className="dashboard-page list-page-card m-4 mt-0 flex-1 rounded-[24px] border border-line/75 bg-surface p-4 shadow-soft sm:p-6">
       {/* TOP */}
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold">All Admins</h1>

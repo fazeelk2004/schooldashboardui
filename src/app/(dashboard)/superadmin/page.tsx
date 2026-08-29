@@ -1,6 +1,7 @@
 import Announcements from "@/components/Announcements";
 import AttendanceChartContainer from "@/components/AttendanceChartContainer";
 import CountChartContainer from "@/components/CountChartContainer";
+import DashboardWelcome from "@/components/DashboardWelcome";
 import EventCalendarContainer from "@/components/EventCalendarContainer";
 import FinanceChart from "@/components/FinanceChart";
 import UserCard from "@/components/UserCard";
@@ -27,11 +28,17 @@ const SuperAdminPage = async ({
   });
 
   return (
-    <div className="p-4 flex gap-4 flex-col md:flex-row">
+    <div className="dashboard-page flex flex-col gap-6 p-4 sm:p-6 lg:p-7">
+      <DashboardWelcome
+        role="Super admin"
+        description="A unified view across every school, with organization-wide people, performance, and operational insight."
+        actions={[{ label: "Manage schools", href: "/list/schools", primary: true }]}
+      />
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
       {/* LEFT */}
-      <div className="w-full lg:w-2/3 flex flex-col gap-8">
+      <div className="flex min-w-0 flex-col gap-6">
         {/* USER CARDS — aggregate across all schools */}
-        <div className="flex gap-4 justify-between flex-wrap">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <UserCard type="admin" />
           <UserCard type="teacher" />
           <UserCard type="student" />
@@ -39,12 +46,12 @@ const SuperAdminPage = async ({
         </div>
 
         {/* SCHOOLS LIST */}
-        <div className="bg-white rounded-xl p-4">
+        <div className="dashboard-card rounded-[22px] border border-line/75 bg-surface p-5 shadow-soft">
           <div className="flex justify-between items-center mb-4">
-            <h1 className="text-lg font-semibold">All Schools</h1>
+            <div><span className="dashboard-section-kicker">Network</span><h2 className="mt-1 text-lg font-bold tracking-tight text-ink">All schools</h2></div>
             <Link
               href="/list/schools"
-              className="text-xs text-blue-500 hover:underline"
+              className="text-xs font-bold text-brand hover:underline"
             >
               View All
             </Link>
@@ -53,20 +60,20 @@ const SuperAdminPage = async ({
             {schools.map((school) => (
               <div
                 key={school.id}
-                className="border border-gray-100 rounded-lg p-4 hover:shadow-md transition-shadow"
+                className="group rounded-2xl border border-line/75 bg-surface-muted/45 p-4 transition hover:-translate-y-1 hover:border-brand/25 hover:shadow-card"
               >
-                <h2 className="font-semibold text-gray-700">{school.name}</h2>
-                <p className="text-xs text-gray-400 mt-1">
+                <h3 className="font-bold text-ink">{school.name}</h3>
+                <p className="mt-1 text-xs text-ink-subtle">
                   {school.address || "No address"}
                 </p>
-                <div className="flex gap-4 mt-3 text-xs text-gray-500">
-                  <span className="bg-lamaSkyLight px-2 py-1 rounded">
+                <div className="mt-4 flex flex-wrap gap-2 text-[10px] font-semibold text-ink-muted">
+                  <span className="rounded-full bg-sky-500/10 px-2.5 py-1 text-sky-600 dark:text-sky-300">
                     {school._count.students} Students
                   </span>
-                  <span className="bg-lamaYellowLight px-2 py-1 rounded">
+                  <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-amber-600 dark:text-amber-300">
                     {school._count.teachers} Teachers
                   </span>
-                  <span className="bg-lamaPurpleLight px-2 py-1 rounded">
+                  <span className="rounded-full bg-violet-500/10 px-2.5 py-1 text-violet-600 dark:text-violet-300">
                     {school._count.classes} Classes
                   </span>
                 </div>
@@ -76,13 +83,13 @@ const SuperAdminPage = async ({
         </div>
 
         {/* MIDDLE CHARTS */}
-        <div className="flex gap-4 flex-col lg:flex-row">
+        <div className="grid gap-6 lg:grid-cols-[minmax(280px,.72fr)_minmax(0,1.45fr)]">
           {/* COUNT CHART */}
-          <div className="w-full lg:w-1/3 h-[450px]">
+          <div className="h-[430px] w-full">
             <CountChartContainer />
           </div>
           {/* ATTENDANCE CHART */}
-          <div className="w-full lg:w-2/3 h-[450px]">
+          <div className="h-[430px] w-full">
             <AttendanceChartContainer />
           </div>
         </div>
@@ -92,9 +99,10 @@ const SuperAdminPage = async ({
         </div>
       </div>
       {/* RIGHT */}
-      <div className="w-full lg:w-1/3 flex flex-col gap-8">
+      <aside className="flex w-full flex-col gap-6">
         <EventCalendarContainer searchParams={searchParams} />
         <Announcements />
+      </aside>
       </div>
     </div>
   );

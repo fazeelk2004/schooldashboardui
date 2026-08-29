@@ -68,7 +68,7 @@ const Field = ({
   className?: string;
 }) => (
   <div className={`flex flex-col gap-1.5 ${className}`}>
-    <label className="text-[11px] uppercase tracking-wide font-medium text-gray-500">
+    <label className="text-[11px] font-bold uppercase tracking-[0.09em] text-ink-muted">
       {label}
     </label>
     {children}
@@ -77,7 +77,7 @@ const Field = ({
 );
 
 const inputCls =
-  "w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-800 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100";
+  "w-full rounded-xl border border-line bg-surface-muted/50 px-3.5 py-2.5 text-sm font-medium text-ink shadow-sm outline-none transition hover:border-ink-subtle/50 focus:border-brand/60 focus:bg-surface focus:ring-4 focus:ring-brand/10";
 
 const LessonForm = ({
   type,
@@ -169,9 +169,9 @@ const LessonForm = ({
   }, [teachers, activeSubjectId]);
 
   return (
-    <form className="flex flex-col gap-6" onSubmit={onSubmit}>
+    <form className="modern-form flex flex-col gap-6" onSubmit={onSubmit}>
       <header className="flex flex-col gap-1">
-        <h1 className="text-lg font-semibold text-gray-900">
+        <h1 className="text-xl font-bold tracking-[-0.03em] text-ink">
           {type === "create" ? "New Lesson" : "Edit Lesson"}
         </h1>
         <p className="text-xs font-medium text-ink-muted">
@@ -180,7 +180,7 @@ const LessonForm = ({
       </header>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-ink-subtle">
           Lesson details
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -222,10 +222,10 @@ const LessonForm = ({
 
       <section className="flex flex-col gap-4">
         <div className="flex items-baseline justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-ink-subtle">
             Semester window
           </h2>
-          <span className="text-[11px] text-gray-400">Repeats weekly within this range</span>
+          <span className="text-[11px] text-ink-subtle">Repeats weekly within this range</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field
@@ -254,7 +254,7 @@ const LessonForm = ({
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-ink-subtle">
           Assignment
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -337,18 +337,18 @@ const LessonForm = ({
         <p className="text-sm text-red-500">Something went wrong. Please try again.</p>
       )}
 
-      <div className="flex items-center justify-end gap-3 pt-2 border-t border-gray-100">
+      <div className="flex items-center justify-end gap-3 border-t border-line pt-4">
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition"
+          className="rounded-xl border border-line px-4 py-2.5 text-sm font-semibold text-ink-muted transition hover:bg-surface-subtle"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isSubmitting}
-          className="px-5 py-2 rounded-lg text-sm font-medium text-white bg-gray-900 hover:bg-black disabled:opacity-60 transition"
+          className="rounded-xl bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-brand/20 transition hover:-translate-y-0.5 disabled:opacity-60"
         >
           {type === "create" ? "Create lesson" : "Save changes"}
         </button>

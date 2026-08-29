@@ -54,8 +54,6 @@ const StudentForm = ({
   );
 
   const onSubmit = handleSubmit((data) => {
-    console.log("hello");
-    console.log(data);
     formAction({ ...data, img: img?.secure_url ?? "" });
   });
 
@@ -72,7 +70,7 @@ const StudentForm = ({
   const { grades, classes, schools, currentSchoolId } = relatedData;
 
   return (
-    <form className="flex flex-col gap-8" onSubmit={onSubmit}>
+    <form className="modern-form flex flex-col gap-8" onSubmit={onSubmit}>
       <h1 className="text-xl font-semibold text-ink">
         {type === "create" ? "Create a new student" : "Update the student"}
       </h1>

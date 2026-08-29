@@ -71,7 +71,7 @@ const GradeListPage = async ({
       </td>
       {role === "superadmin" && (
         <td className="hidden md:table-cell">
-          <span className="text-xs bg-lamaSkyLight px-2 py-1 rounded">
+          <span className="rounded-full bg-brand/10 px-2.5 py-1 text-xs font-semibold text-brand">
             {item.school?.name}
           </span>
         </td>
@@ -129,7 +129,7 @@ const GradeListPage = async ({
   ]);
 
   return (
-    <div className="m-4 mt-0 flex-1 rounded-2xl border border-line bg-surface p-6 shadow-soft">
+    <div className="dashboard-page list-page-card m-4 mt-0 flex-1 rounded-[24px] border border-line/75 bg-surface p-4 shadow-soft sm:p-6">
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold">All Grades</h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">

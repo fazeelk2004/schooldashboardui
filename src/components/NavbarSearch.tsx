@@ -17,7 +17,7 @@ export default function NavbarSearch() {
   return (
     <form
       onSubmit={onSubmit}
-      className="hidden md:flex items-center gap-2 rounded-xl border border-line bg-surface-muted px-3 py-2 w-[280px] focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20 transition"
+      className="group hidden w-[300px] items-center gap-2.5 rounded-xl border border-line/80 bg-surface-muted/75 px-3.5 py-2.5 shadow-sm transition focus-within:border-brand/50 focus-within:bg-surface focus-within:ring-4 focus-within:ring-brand/10 md:flex"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -29,7 +29,7 @@ export default function NavbarSearch() {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className="text-ink-subtle"
+        className="text-ink-subtle transition-colors group-focus-within:text-brand"
       >
         <circle cx="11" cy="11" r="8" />
         <path d="m21 21-4.3-4.3" />
@@ -38,8 +38,8 @@ export default function NavbarSearch() {
         type="text"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Search students, teachers, classes..."
-        className="w-full bg-transparent text-sm text-ink placeholder:text-ink-subtle outline-none"
+        placeholder="Search your workspace..."
+        className="w-full bg-transparent text-[13px] font-medium text-ink placeholder:font-normal placeholder:text-ink-subtle outline-none"
       />
     </form>
   );

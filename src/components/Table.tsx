@@ -8,21 +8,21 @@ const Table = ({
   data: any[];
 }) => {
   return (
-    <div className="mt-4 w-full overflow-x-auto rounded-xl border border-line">
+    <div className="data-table-shell mt-5 w-full overflow-x-auto rounded-2xl border border-line/75 bg-surface">
       <table className="w-full border-separate border-spacing-0">
         <thead>
-          <tr className="bg-surface-subtle text-left text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">
+          <tr className="bg-surface-muted/75 text-left text-[10px] font-bold uppercase tracking-[0.12em] text-ink-subtle">
             {columns.map((col) => (
               <th
                 key={col.accessor}
-                className={`px-4 py-3 border-b border-line ${col.className ?? ""}`}
+                className={`border-b border-line/75 px-4 py-3.5 ${col.className ?? ""}`}
               >
                 {col.header}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-line text-sm [&_td]:px-4 [&_td]:py-3">
+        <tbody className="divide-y divide-line/70 text-sm [&_tr]:transition-colors [&_td]:px-4 [&_td]:py-3.5">
           {data.length === 0 ? (
             <tr>
               <td

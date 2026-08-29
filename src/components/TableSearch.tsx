@@ -18,7 +18,7 @@ const TableSearch = () => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex w-full md:w-64 items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2 focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20 transition"
+      className="group flex w-full items-center gap-2.5 rounded-xl border border-line/80 bg-surface-muted/50 px-3.5 py-2.5 shadow-sm transition focus-within:border-brand/50 focus-within:bg-surface focus-within:ring-4 focus-within:ring-brand/10 md:w-72"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -30,15 +30,15 @@ const TableSearch = () => {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className="text-ink-subtle shrink-0"
+        className="shrink-0 text-ink-subtle transition-colors group-focus-within:text-brand"
       >
         <circle cx="11" cy="11" r="8" />
         <path d="m21 21-4.3-4.3" />
       </svg>
       <input
         type="text"
-        placeholder="Search..."
-        className="w-full bg-transparent text-sm text-ink placeholder:text-ink-subtle outline-none"
+        placeholder="Search records..."
+        className="w-full bg-transparent text-[13px] font-medium text-ink placeholder:font-normal placeholder:text-ink-subtle outline-none"
       />
     </form>
   );

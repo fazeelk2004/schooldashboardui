@@ -1,4 +1,3 @@
-import Image from "next/image";
 import CountChart from "./CountChart";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/utils";
@@ -18,12 +17,13 @@ const CountChartContainer = async () => {
   const girls = data.find((d) => d.sex === "FEMALE")?._count || 0;
 
   return (
-    <div className="h-full w-full rounded-2xl border border-line bg-surface p-5 shadow-soft">
+    <div className="dashboard-card h-full w-full rounded-[22px] border border-line/75 bg-surface p-5 shadow-soft">
       {/* TITLE */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-semibold text-ink">Students</h2>
-          <p className="text-xs text-ink-subtle">Distribution by sex</p>
+          <span className="dashboard-section-kicker">Community</span>
+          <h2 className="mt-1 text-base font-bold text-ink">Student mix</h2>
+          <p className="text-xs text-ink-subtle">Distribution across the school</p>
         </div>
       </div>
       {/* CHART */}
@@ -31,14 +31,14 @@ const CountChartContainer = async () => {
       {/* BOTTOM */}
       <div className="flex justify-center gap-12">
         <div className="flex flex-col items-start gap-1">
-          <span className="h-2.5 w-2.5 rounded-full bg-sky-400" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#4f75ff] shadow-[0_0_0_4px_rgb(79_117_255/.1)]" />
           <p className="text-lg font-semibold text-ink">{boys}</p>
           <p className="text-xs text-ink-subtle">
             Boys ({Math.round((boys / (boys + girls)) * 100) || 0}%)
           </p>
         </div>
         <div className="flex flex-col items-start gap-1">
-          <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+          <span className="h-2.5 w-2.5 rounded-full bg-violet-500 shadow-[0_0_0_4px_rgb(139_92_246/.1)]" />
           <p className="text-lg font-semibold text-ink">{girls}</p>
           <p className="text-xs text-ink-subtle">
             Girls ({Math.round((girls / (boys + girls)) * 100) || 0}%)

@@ -2,24 +2,34 @@ import { getCurrentUser } from "@/lib/utils";
 import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import DashboardWelcome from "@/components/DashboardWelcome";
+
+const CalendarIcon = () => (
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><rect x="3" y="4" width="18" height="17" rx="3" /><path d="M8 2v4M16 2v4M3 9h18" /></svg>
+);
+
+const ClockIcon = () => (
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+);
+
+const ArrowIcon = () => (
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M5 12h14m-5-5 5 5-5 5" /></svg>
+);
 
 export default async function MyQuizzesPage() {
   const { userId, role } = getCurrentUser();
 
   if (role !== "student") redirect("/");
 
-  const student = await (prisma as any).student.findUnique({
+  const student = await prisma.student.findUnique({
     where: { id: userId! },
     select: { classId: true, schoolId: true },
   });
 
   if (!student) redirect("/");
 
-  const quizAssignments = await (prisma as any).quizAssignment.findMany({
-    where: {
-      classId: student.classId,
-      schoolId: student.schoolId,
-    },
+  const quizAssignments = await prisma.quizAssignment.findMany({
+    where: { classId: student.classId, schoolId: student.schoolId },
     include: {
       quiz: {
         select: {
@@ -39,129 +49,96 @@ export default async function MyQuizzesPage() {
   });
 
   const now = new Date();
+  const completed = quizAssignments.filter((item) => item.submissions.length > 0).length;
+  const available = quizAssignments.filter((item) => !item.submissions.length && now >= item.startTime && now <= item.endTime).length;
+  const upcoming = quizAssignments.filter((item) => !item.submissions.length && now < item.startTime).length;
 
   return (
-    <div className="m-4 mt-0 flex-1 rounded-2xl border border-line bg-surface p-6 shadow-soft">
-      {/* TOP */}
-      <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-lg font-semibold">My Quizzes</h1>
-        <span className="text-sm text-gray-500">
-          {quizAssignments.length} assigned
-        </span>
+    <div className="dashboard-page flex flex-col gap-6 p-4 sm:p-6 lg:p-7">
+      <DashboardWelcome
+        role="Student · Assessments"
+        title="Your quizzes, all in one place."
+        description="See what’s ready, what’s coming next, and how you performed—without losing track of a deadline."
+      />
+
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        {[
+          ["Available now", available, "emerald"],
+          ["Coming up", upcoming, "amber"],
+          ["Completed", completed, "violet"],
+        ].map(([label, value, tone]) => (
+          <div key={String(label)} className={`quiz-summary-card quiz-summary-${tone} rounded-2xl border border-line/75 bg-surface p-4 shadow-soft sm:p-5`}>
+            <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-ink-subtle sm:text-[10px]">{label}</span>
+            <p className="mt-2 text-2xl font-bold tracking-tight text-ink sm:text-3xl">{value}</p>
+          </div>
+        ))}
       </div>
 
       {quizAssignments.length === 0 ? (
-        <div className="py-16 text-center text-gray-400">
-          <p className="text-5xl mb-3">🎉</p>
-          <p className="font-medium text-gray-600">No quizzes assigned yet!</p>
-          <p className="text-sm mt-1">Check back later.</p>
+        <div className="dashboard-card rounded-[24px] border border-line/75 bg-surface px-6 py-20 text-center shadow-soft">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand/10 text-brand"><CalendarIcon /></div>
+          <h2 className="mt-5 text-xl font-bold tracking-tight text-ink">You’re all caught up</h2>
+          <p className="mt-2 text-sm text-ink-muted">No quizzes have been assigned to your class yet.</p>
         </div>
       ) : (
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {quizAssignments.map((assignment: any) => {
-            const submission = assignment.submissions[0];
-            const isCompleted = !!submission;
-            const startAt = new Date(assignment.startTime);
-            const endAt = new Date(assignment.endTime);
-            const notStarted = !isCompleted && now < startAt;
-            const isOverdue = !isCompleted && now > endAt;
-            const isOpen = !isCompleted && !notStarted && !isOverdue;
-            const percentage = isCompleted
-              ? Math.round((submission.score / submission.totalMarks) * 100)
-              : null;
-            const isLocked = isCompleted && submission.score === 0;
+        <section>
+          <div className="mb-4 flex items-end justify-between gap-4">
+            <div><span className="dashboard-section-kicker">Assessment timeline</span><h2 className="mt-1.5 text-xl font-bold tracking-tight text-ink">Assigned quizzes</h2></div>
+            <span className="rounded-full border border-line bg-surface px-3 py-1.5 text-[10px] font-bold text-ink-muted">{quizAssignments.length} total</span>
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
+            {quizAssignments.map((assignment) => {
+              const submission = assignment.submissions[0];
+              const isCompleted = !!submission;
+              const startAt = new Date(assignment.startTime);
+              const endAt = new Date(assignment.endTime);
+              const notStarted = !isCompleted && now < startAt;
+              const isOverdue = !isCompleted && now > endAt;
+              const isOpen = !isCompleted && !notStarted && !isOverdue;
+              const percentage = isCompleted && submission.totalMarks > 0
+                ? Math.round((submission.score / submission.totalMarks) * 100)
+                : 0;
+              const isLocked = isCompleted && submission.score === 0;
 
-            return (
-              <div
-                key={assignment.id}
-                className="bg-lamaSkyLight rounded-md border border-gray-200 p-4 hover:shadow-md transition-shadow flex flex-col"
-              >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <h3 className="font-semibold text-gray-800 text-base flex-1">
-                    {assignment.quiz.title}
-                  </h3>
-                  {isCompleted ? (
-                    isLocked ? (
-                      <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full font-medium shrink-0">
-                        🔒 Locked
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium shrink-0">
-                        ✓ Done
-                      </span>
-                    )
-                  ) : isOverdue ? (
-                    <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full font-medium shrink-0">
-                      Closed
-                    </span>
-                  ) : notStarted ? (
-                    <span className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full font-medium shrink-0">
-                      Not started
-                    </span>
-                  ) : (
-                    <span className="px-2 py-0.5 bg-lamaYellow text-gray-800 text-xs rounded-full font-medium shrink-0">
-                      Available
-                    </span>
-                  )}
-                </div>
+              const state = isLocked ? "locked" : isCompleted ? "done" : isOverdue ? "closed" : notStarted ? "upcoming" : "available";
+              const stateLabel = isLocked ? "Locked" : isCompleted ? "Completed" : isOverdue ? "Closed" : notStarted ? "Upcoming" : "Available";
 
-                <div className="space-y-1 text-sm text-gray-500 mb-4">
-                  <div>
-                    👤 {assignment.quiz.teacher.name} {assignment.quiz.teacher.surname}
+              return (
+                <article key={assignment.id} className="quiz-assignment-card group relative flex min-h-[320px] flex-col overflow-hidden rounded-[22px] border border-line/75 bg-surface p-5 shadow-soft">
+                  <span className={`quiz-card-accent quiz-card-accent-${state} absolute inset-x-0 top-0 h-1`} />
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand/10 text-brand transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-105">
+                      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><path d="M14 2v6h6M9 13h.01M13 13h3M9 17h.01M13 17h3" /></svg>
+                    </span>
+                    <span className={`quiz-state-badge quiz-state-${state}`}>{stateLabel}</span>
                   </div>
-                  <div>❓ {assignment.quiz._count.questions} questions</div>
-                  <div className={isOverdue ? "text-red-500" : ""}>
-                    📅{" "}
-                    {new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(startAt)}
-                  </div>
-                  <div className={isOverdue ? "text-red-500" : ""}>
-                    🕒{" "}
-                    {new Intl.DateTimeFormat("en-US", { hour: "2-digit", minute: "2-digit" }).format(startAt)}
-                    {" – "}
-                    {new Intl.DateTimeFormat("en-US", { hour: "2-digit", minute: "2-digit" }).format(endAt)}
-                  </div>
-                </div>
+                  <h3 className="mt-5 text-lg font-bold leading-snug tracking-[-0.025em] text-ink">{assignment.quiz.title}</h3>
+                  <p className="mt-1.5 text-xs font-medium text-ink-subtle">By {assignment.quiz.teacher.name} {assignment.quiz.teacher.surname} · {assignment.quiz._count.questions} questions</p>
 
-                <div className="mt-auto">
-                  {isCompleted ? (
-                    <div className="bg-white rounded-md px-3 py-2 border border-gray-100 flex items-center justify-between">
-                      <span className="text-xs text-gray-500">Your Score</span>
-                      <span
-                        className={`text-lg font-bold ${
-                          percentage! >= 70
-                            ? "text-green-600"
-                            : percentage! >= 40
-                            ? "text-yellow-600"
-                            : "text-red-600"
-                        }`}
-                      >
-                        {percentage}%{" "}
-                        <span className="text-xs font-normal text-gray-400">
-                          ({submission.score}/{submission.totalMarks})
-                        </span>
-                      </span>
-                    </div>
-                  ) : isOverdue ? (
-                    <div className="text-center text-sm text-red-500 py-2 font-medium">
-                      Submission window closed
-                    </div>
-                  ) : notStarted ? (
-                    <div className="text-center text-sm text-gray-500 py-2 font-medium">
-                      Available {new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(startAt)}
-                    </div>
-                  ) : isOpen ? (
-                    <Link
-                      href={`/list/quiz-take/${assignment.id}`}
-                      className="block text-center bg-lamaSky text-gray-800 text-sm font-semibold py-2.5 rounded-md hover:bg-lamaSky/80 transition-colors"
-                    >
-                      Take Quiz →
-                    </Link>
-                  ) : null}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                  <div className="mt-5 space-y-2 rounded-2xl border border-line/70 bg-surface-muted/45 p-3.5 text-xs text-ink-muted">
+                    <div className="flex items-center gap-2"><CalendarIcon />{new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(startAt)}</div>
+                    <div className="flex items-center gap-2"><ClockIcon />{new Intl.DateTimeFormat("en-US", { hour: "2-digit", minute: "2-digit" }).format(startAt)} – {new Intl.DateTimeFormat("en-US", { hour: "2-digit", minute: "2-digit" }).format(endAt)}</div>
+                  </div>
+
+                  <div className="mt-auto pt-5">
+                    {isCompleted ? (
+                      <div className="flex items-center justify-between rounded-xl border border-line/70 bg-surface-muted/55 px-3.5 py-3">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-ink-subtle">Your score</span>
+                        <span className={`text-xl font-bold ${percentage >= 70 ? "text-emerald-500" : percentage >= 40 ? "text-amber-500" : "text-rose-500"}`}>{percentage}% <small className="text-[10px] font-medium text-ink-subtle">{submission.score}/{submission.totalMarks}</small></span>
+                      </div>
+                    ) : isOverdue ? (
+                      <p className="rounded-xl bg-rose-500/8 px-3 py-3 text-center text-xs font-bold text-rose-500">Submission window closed</p>
+                    ) : notStarted ? (
+                      <p className="rounded-xl bg-amber-500/8 px-3 py-3 text-center text-xs font-bold text-amber-600 dark:text-amber-300">Opens {new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(startAt)}</p>
+                    ) : isOpen ? (
+                      <Link href={`/list/quiz-take/${assignment.id}`} className="btn-primary group/button flex w-full gap-2 py-3">Start quiz <ArrowIcon /></Link>
+                    ) : null}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
       )}
     </div>
   );

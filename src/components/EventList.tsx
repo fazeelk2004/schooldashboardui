@@ -27,7 +27,7 @@ const EventList = async ({ dateParam }: { dateParam: string | undefined }) => {
 
   return data.map((event, idx) => (
     <div
-      className="group rounded-xl border border-line bg-surface-muted p-4 hover:border-brand/40 transition"
+      className="event-list-item group rounded-2xl border border-line/70 bg-surface-muted/55 p-4 transition hover:border-brand/30 hover:bg-surface"
       key={event.id}
     >
       <div className="flex items-start justify-between gap-3">

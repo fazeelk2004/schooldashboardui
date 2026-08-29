@@ -40,7 +40,6 @@ const SubjectForm = ({
   );
 
   const onSubmit = handleSubmit((data) => {
-    console.log(data);
     formAction(data);
   });
 
@@ -57,7 +56,7 @@ const SubjectForm = ({
   const { teachers, schools, currentSchoolId } = relatedData;
 
   return (
-    <form className="flex flex-col gap-8" onSubmit={onSubmit}>
+    <form className="modern-form flex flex-col gap-8" onSubmit={onSubmit}>
       <h1 className="text-xl font-semibold text-ink">
         {type === "create" ? "Create a new subject" : "Update the subject"}
       </h1>

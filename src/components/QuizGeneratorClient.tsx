@@ -134,18 +134,20 @@ export default function QuizGeneratorClient({ teacherId, schoolId, classes }: Pr
     d === "easy" ? "text-green-600 dark:text-green-400" : d === "hard" ? "text-red-600 dark:text-red-400" : "text-yellow-600 dark:text-yellow-400";
 
   return (
-    <div className="panel overflow-hidden">
+    <div className="quiz-builder dashboard-card overflow-hidden rounded-[24px] border border-line/75 bg-surface shadow-soft">
       {/* Step Header */}
-      <div className="px-6 py-5 border-b border-line bg-surface-subtle">
-        <h2 className="text-ink text-lg font-semibold mb-4">AI Quiz Generator</h2>
-        <div className="flex items-center gap-2">
+      <div className="relative overflow-hidden border-b border-line/70 bg-gradient-to-br from-brand/10 via-surface to-violet-500/5 px-5 py-6 sm:px-7">
+        <span className="dashboard-section-kicker">Build with Neura</span>
+        <h2 className="mt-2 text-xl font-bold tracking-[-0.03em] text-ink">AI Quiz Generator</h2>
+        <p className="mt-1 text-xs text-ink-muted">Generate, review, save, and assign in three focused steps.</p>
+        <div className="mt-5 flex items-center gap-1.5 sm:gap-2">
           {STEPS.map((label, i) => (
             <div key={label} className="flex items-center gap-2">
               <div
-                className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold transition-all border
+                className={`flex h-8 w-8 items-center justify-center rounded-xl border text-xs font-bold transition-all
                   ${
                     step === i
-                      ? "bg-brand text-white border-transparent shadow-sm scale-110"
+                      ? "scale-105 border-transparent bg-brand text-white shadow-lg shadow-brand/20"
                       : step > i
                       ? "bg-brand-soft text-brand border-transparent"
                       : "bg-surface text-ink-subtle border-line"
@@ -154,23 +156,23 @@ export default function QuizGeneratorClient({ teacherId, schoolId, classes }: Pr
                 {step > i ? "✓" : i + 1}
               </div>
               <span
-                className={`text-sm font-medium ${
+                className={`hidden text-xs font-bold sm:inline ${
                   step === i ? "text-ink" : "text-ink-subtle"
                 }`}
               >
                 {label}
               </span>
-              {i < STEPS.length - 1 && <div className="w-8 h-0.5 bg-line mx-1" />}
+              {i < STEPS.length - 1 && <div className="mx-1 h-px w-5 bg-line sm:w-8" />}
             </div>
           ))}
         </div>
       </div>
 
-      <div className="p-6">
+      <div className="p-5 sm:p-7">
         {/* STEP 0 */}
         {step === 0 && (
-          <div className="space-y-5">
-            <div className="border-2 border-dashed border-line rounded-xl p-5 text-center hover:border-brand transition-colors bg-surface-subtle">
+          <div className="space-y-6">
+            <div className={`quiz-dropzone group relative overflow-hidden rounded-2xl border-2 border-dashed p-7 text-center transition-all ${file ? "border-brand/40 bg-brand/5" : "border-line bg-surface-muted/45 hover:border-brand/40 hover:bg-brand/5"}`}>
               <input
                 type="file"
                 id="quizFile"
@@ -179,21 +181,21 @@ export default function QuizGeneratorClient({ teacherId, schoolId, classes }: Pr
                 className="hidden"
               />
               <label htmlFor="quizFile" className="cursor-pointer block">
-                <div className="mx-auto w-10 h-10 rounded-full bg-surface border border-line flex items-center justify-center mb-3 text-ink-muted">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-line bg-surface text-brand shadow-sm transition-transform duration-300 group-hover:-translate-y-1">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 </div>
                 {file ? (
                   <p className="text-ink font-medium">{file.name}</p>
                 ) : (
                   <>
-                    <p className="text-ink font-medium">Click to upload or drag &amp; drop</p>
-                    <p className="text-ink-subtle text-sm mt-1">PDF, DOCX, PPTX, TXT</p>
+                    <p className="font-bold text-ink">Choose your lesson material</p>
+                    <p className="mt-1 text-xs text-ink-subtle">PDF, DOCX, PPTX, or TXT</p>
                   </>
                 )}
               </label>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 rounded-2xl border border-line/70 bg-surface-muted/35 p-4 sm:grid-cols-2">
               <div>
                 <label className="block text-xs font-medium text-ink-muted mb-1.5">Number of Questions</label>
                 <input
@@ -223,13 +225,13 @@ export default function QuizGeneratorClient({ teacherId, schoolId, classes }: Pr
             <button
               onClick={generate}
               disabled={loading || !file}
-              className="btn-primary w-full py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary group w-full gap-2 py-3.5 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? "Generating…" : "Generate MCQs"}
             </button>
 
             {showProgress && (
-              <div className="w-full bg-surface-subtle rounded-full h-2 overflow-hidden">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-surface-subtle p-0.5">
                 <div
                   className="h-full bg-brand transition-all duration-200 rounded-full"
                   style={{ width: `${progress}%` }}
@@ -250,7 +252,7 @@ export default function QuizGeneratorClient({ teacherId, schoolId, classes }: Pr
                 </div>
                 <div className="max-h-80 overflow-y-auto space-y-3 pr-1">
                   {quiz.map((q, i) => (
-                    <div key={i} className="bg-surface-subtle border border-line rounded-xl p-4">
+                    <div key={i} className="question-preview rounded-2xl border border-line/70 bg-surface-muted/45 p-4 transition hover:border-brand/25 hover:bg-surface">
                       <p className="font-medium text-ink text-sm">
                         {i + 1}. {q.question}{" "}
                         <span className={`text-xs font-semibold italic ml-1 ${difficultyColor(q.difficulty)}`}>
@@ -281,8 +283,8 @@ export default function QuizGeneratorClient({ teacherId, schoolId, classes }: Pr
 
         {/* STEP 1 */}
         {step === 1 && (
-          <div className="space-y-5">
-            <div className="bg-brand-soft border border-line rounded-xl p-4 text-sm text-ink">
+          <div className="space-y-6">
+            <div className="rounded-2xl border border-emerald-500/15 bg-emerald-500/8 p-4 text-sm font-medium text-ink">
               ✅ {quiz.length} questions generated. Give this quiz a title to save it.
             </div>
             <div>
@@ -315,8 +317,8 @@ export default function QuizGeneratorClient({ teacherId, schoolId, classes }: Pr
 
         {/* STEP 2 */}
         {step === 2 && (
-          <div className="space-y-5">
-            <div className="bg-brand-soft border border-line rounded-xl p-4 text-sm text-ink">
+          <div className="space-y-6">
+            <div className="rounded-2xl border border-emerald-500/15 bg-emerald-500/8 p-4 text-sm font-medium text-ink">
               ✅ Quiz &quot;<strong>{quizTitle}</strong>&quot; saved! Now assign it to a class.
             </div>
             {classes.length === 0 ? (

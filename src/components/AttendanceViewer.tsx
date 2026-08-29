@@ -53,7 +53,7 @@ const AttendanceViewer = ({
   const showStudentColumn = role !== "student";
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="attendance-viewer flex flex-col gap-5">
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Records" value={total} />
@@ -63,7 +63,7 @@ const AttendanceViewer = ({
       </div>
 
       {/* Filters */}
-      <div className="panel p-4 flex flex-wrap gap-3 items-center">
+      <div className="dashboard-card flex flex-wrap items-center gap-3 rounded-[22px] border border-line/75 bg-surface p-4 shadow-soft">
         <div className="relative flex-1 min-w-[200px]">
           <svg
             width="14"
@@ -87,13 +87,13 @@ const AttendanceViewer = ({
             className="input-base pl-9"
           />
         </div>
-        <div className="inline-flex bg-surface-subtle rounded-xl p-0.5 text-xs font-medium">
+        <div className="inline-flex rounded-xl border border-line/70 bg-surface-muted p-1 text-xs font-semibold">
           {(["all", "present", "absent"] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={`px-3.5 py-1.5 rounded-lg capitalize transition ${
-                filter === f ? "bg-surface text-ink shadow-sm" : "text-ink-subtle"
+                filter === f ? "bg-brand text-white shadow-sm" : "text-ink-subtle hover:text-ink"
               }`}
             >
               {f}
@@ -103,7 +103,7 @@ const AttendanceViewer = ({
       </div>
 
       {/* Table */}
-      <div className="panel overflow-hidden">
+      <div className="dashboard-card overflow-hidden rounded-[22px] border border-line/75 bg-surface shadow-soft">
         {filtered.length === 0 ? (
           <div className="p-12 text-center text-sm text-ink-subtle">
             No attendance records found.
@@ -112,7 +112,7 @@ const AttendanceViewer = ({
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-line">
+                <tr className="border-b border-line/70 bg-surface-muted/65">
                   <th className="px-5 py-3.5 text-left text-[11px] font-semibold text-ink-subtle uppercase tracking-wider">
                     Date
                   </th>
@@ -137,7 +137,7 @@ const AttendanceViewer = ({
               </thead>
               <tbody className="divide-y divide-line">
                 {filtered.map((r) => (
-                  <tr key={r.id} className="hover:bg-surface-subtle transition-colors">
+                  <tr key={r.id} className="hover:bg-brand/[0.035] transition-colors">
                     <td className="px-5 py-3.5 text-sm text-ink-muted whitespace-nowrap">
                       {fmtDate(r.date)}
                     </td>
@@ -198,7 +198,8 @@ const StatCard = ({
     neutral: "text-ink",
   }[tone];
   return (
-    <div className="panel px-5 py-4">
+    <div className="attendance-stat dashboard-card relative overflow-hidden rounded-2xl border border-line/75 bg-surface px-4 py-4 shadow-soft sm:px-5">
+      <span className={`absolute inset-x-0 top-0 h-0.5 ${tone === "green" ? "bg-emerald-500" : tone === "red" ? "bg-rose-500" : "bg-brand"}`} />
       <div className={`text-2xl font-semibold ${toneClasses}`}>{value}</div>
       <div className="text-[11px] text-ink-subtle font-medium uppercase tracking-wider mt-1">
         {label}

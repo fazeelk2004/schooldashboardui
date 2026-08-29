@@ -13,13 +13,14 @@ export default function DashboardLayout({
     <>
       <Link
         href="/"
-        className="flex items-center justify-start lg:justify-start gap-2 px-2 mb-2 md:justify-center lg:!justify-start"
+        className="group mb-4 flex items-center justify-start gap-3 px-2 md:justify-center lg:!justify-start"
       >
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-soft">
-          <Image src="/logo.png" alt="logo" width={20} height={20} />
+        <div className="dashboard-logo flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl">
+          <Image className="transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110" src="/logo.png" alt="logo" width={23} height={23} />
         </div>
-        <span className="block md:hidden lg:block font-semibold tracking-tight text-ink">
-          NeuraLearn
+        <span className="block md:hidden lg:block">
+          <span className="block text-[16px] font-bold tracking-[-0.035em] text-ink">NeuraLearn</span>
+          <span className="mt-0.5 block text-[9px] font-semibold uppercase tracking-[0.15em] text-ink-subtle">School workspace</span>
         </span>
       </Link>
       <Menu />

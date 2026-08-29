@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import {
   LineChart,
   Line,
@@ -77,10 +76,11 @@ const data = [
 
 const FinanceChart = () => {
   return (
-    <div className="h-full w-full rounded-2xl border border-line bg-surface p-5 shadow-soft">
+    <div className="dashboard-card h-full w-full rounded-[22px] border border-line/75 bg-surface p-5 shadow-soft">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-semibold text-ink">Finance</h2>
+          <span className="dashboard-section-kicker">Financial health</span>
+          <h2 className="mt-1 text-base font-bold text-ink">Finance</h2>
           <p className="text-xs text-ink-subtle">Monthly income vs expense</p>
         </div>
       </div>
@@ -96,16 +96,16 @@ const FinanceChart = () => {
             bottom: 5,
           }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#ddd" />
+          <CartesianGrid strokeDasharray="4 6" stroke="rgb(var(--line))" opacity={0.7} />
           <XAxis
             dataKey="name"
             axisLine={false}
-            tick={{ fill: "#d1d5db" }}
+            tick={{ fill: "rgb(var(--ink-subtle))", fontSize: 11 }}
             tickLine={false}
             tickMargin={10}
           />
-          <YAxis axisLine={false} tick={{ fill: "#d1d5db" }} tickLine={false}  tickMargin={20}/>
-          <Tooltip />
+          <YAxis axisLine={false} tick={{ fill: "rgb(var(--ink-subtle))", fontSize: 11 }} tickLine={false}  tickMargin={20}/>
+          <Tooltip contentStyle={{ borderRadius: "14px", borderColor: "rgb(var(--line))", background: "rgb(var(--surface))", color: "rgb(var(--ink))" }} />
           <Legend
             align="center"
             verticalAlign="top"
@@ -114,10 +114,11 @@ const FinanceChart = () => {
           <Line
             type="monotone"
             dataKey="income"
-            stroke="#C3EBFA"
-            strokeWidth={5}
+            stroke="#4f75ff"
+            strokeWidth={3}
+            dot={false}
           />
-          <Line type="monotone" dataKey="expense" stroke="#CFCEFF" strokeWidth={5}/>
+          <Line type="monotone" dataKey="expense" stroke="#a78bfa" strokeWidth={3} dot={false}/>
         </LineChart>
       </ResponsiveContainer>
     </div>

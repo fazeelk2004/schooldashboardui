@@ -15,12 +15,12 @@ export type NotificationItem = {
 };
 
 const typeAccent: Record<string, string> = {
-  ASSIGNMENT: "bg-amber-100 text-amber-700",
-  EXAM: "bg-red-100 text-red-700",
-  QUIZ: "bg-violet-100 text-violet-700",
-  STUDENT: "bg-sky-100 text-sky-700",
-  ANNOUNCEMENT: "bg-emerald-100 text-emerald-700",
-  GENERAL: "bg-slate-100 text-slate-700",
+  ASSIGNMENT: "bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  EXAM: "bg-rose-500/10 text-rose-700 dark:text-rose-300",
+  QUIZ: "bg-violet-500/10 text-violet-700 dark:text-violet-300",
+  STUDENT: "bg-sky-500/10 text-sky-700 dark:text-sky-300",
+  ANNOUNCEMENT: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+  GENERAL: "bg-slate-500/10 text-slate-700 dark:text-slate-300",
 };
 
 const formatTime = (iso: string) => {
@@ -75,7 +75,7 @@ export default function NotificationBell({
       <button
         aria-label="Notifications"
         onClick={handleOpen}
-        className="relative hidden md:inline-flex h-9 w-9 items-center justify-center rounded-xl border border-line bg-surface text-ink-muted hover:bg-surface-subtle hover:text-ink transition"
+        className="relative hidden h-10 w-10 items-center justify-center rounded-xl border border-line/75 bg-surface-muted/60 text-ink-muted shadow-sm transition hover:border-brand/20 hover:bg-surface-subtle hover:text-brand md:inline-flex"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -99,7 +99,7 @@ export default function NotificationBell({
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 max-h-[420px] overflow-y-auto rounded-xl border border-line bg-surface shadow-lg z-50">
+        <div className="dashboard-popover absolute right-0 z-50 mt-2 max-h-[440px] w-80 overflow-y-auto rounded-2xl border border-line bg-surface shadow-2xl">
           <div className="flex items-center justify-between px-4 py-3 border-b border-line sticky top-0 bg-surface">
             <h3 className="text-sm font-semibold text-ink">Notifications</h3>
             <span className="text-[11px] text-ink-subtle">{items.length} total</span>

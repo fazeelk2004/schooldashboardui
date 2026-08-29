@@ -21,19 +21,19 @@ const EventComponent = ({ event }: { event: CalendarEvent }) => {
   return (
     <div className="h-full w-full overflow-hidden px-1 text-[10px] leading-[1.1]">
 
-      <div className="truncate font-semibold text-slate-900">
+      <div className="truncate font-semibold text-ink">
         {event.title}
       </div>
 
-      <div className="truncate text-slate-800">
+      <div className="truncate text-ink-muted">
         {event.subjectName}
       </div>
 
-      <div className="truncate text-slate-800">
+      <div className="truncate text-ink-muted">
         {event.teacherName}
       </div>
 
-      <div className="truncate text-slate-800">
+      <div className="truncate text-ink-muted">
         {event.className}
       </div>
     </div>

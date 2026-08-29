@@ -72,7 +72,7 @@ const SchoolListPage = async ({
       <td className="flex items-center gap-4 p-4">
         <div className="flex flex-col">
           <h3 className="font-semibold">{item.name}</h3>
-          <p className="text-xs text-gray-500">{item.email || "-"}</p>
+          <p className="text-xs text-ink-subtle">{item.email || "-"}</p>
         </div>
       </td>
       <td className="hidden md:table-cell">{item.address || "-"}</td>
@@ -148,7 +148,7 @@ const SchoolListPage = async ({
   ]);
 
   return (
-    <div className="m-4 mt-0 flex-1 rounded-2xl border border-line bg-surface p-6 shadow-soft">
+    <div className="dashboard-page list-page-card m-4 mt-0 flex-1 rounded-[24px] border border-line/75 bg-surface p-4 shadow-soft sm:p-6">
       {/* TOP */}
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold">All Schools</h1>

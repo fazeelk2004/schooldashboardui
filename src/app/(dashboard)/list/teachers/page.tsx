@@ -83,7 +83,7 @@ const TeacherListPage = async ({
         />
         <div className="flex flex-col">
           <h3 className="font-semibold">{item.name}</h3>
-          <p className="text-xs text-gray-500">{item?.email}</p>
+          <p className="text-xs text-ink-subtle">{item?.email}</p>
         </div>
       </td>
       <td className="hidden md:table-cell">{item.username}</td>
@@ -97,13 +97,13 @@ const TeacherListPage = async ({
       <td className="hidden md:table-cell">{item.address}</td>
       {role === "superadmin" && (
         <td className="hidden md:table-cell">
-          <span className="text-xs bg-lamaSkyLight px-2 py-1 rounded">{item.school?.name}</span>
+          <span className="rounded-full bg-brand/10 px-2.5 py-1 text-xs font-semibold text-brand">{item.school?.name}</span>
         </td>
       )}
       <td>
         <div className="flex items-center gap-2">
           <Link href={`/list/teachers/${item.id}`}>
-            <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky">
+            <button className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand/10 text-brand transition hover:bg-brand/20">
               <Image src="/view.png" alt="" width={16} height={16} />
             </button>
           </Link>
@@ -197,7 +197,7 @@ const TeacherListPage = async ({
   ]);
 
   return (
-    <div className="m-4 mt-0 flex-1 rounded-2xl border border-line bg-surface p-6 shadow-soft">
+    <div className="dashboard-page list-page-card m-4 mt-0 flex-1 rounded-[24px] border border-line/75 bg-surface p-4 shadow-soft sm:p-6">
       {/* TOP */}
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold">All Teachers</h1>

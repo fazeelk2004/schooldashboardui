@@ -54,7 +54,7 @@ const AnnouncementForm = ({
   const { classes, schools, currentSchoolId } = relatedData;
 
   return (
-    <form className="flex flex-col gap-8" onSubmit={onSubmit}>
+    <form className="modern-form flex flex-col gap-8" onSubmit={onSubmit}>
       <h1 className="text-xl font-semibold text-ink">
         {type === "create" ? "Create a new announcement" : "Update the announcement"}
       </h1>

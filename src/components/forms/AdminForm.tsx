@@ -55,7 +55,7 @@ const AdminForm = ({
   const { schools } = relatedData || {};
 
   return (
-    <form className="flex flex-col gap-8" onSubmit={onSubmit}>
+    <form className="modern-form flex flex-col gap-8" onSubmit={onSubmit}>
       <h1 className="text-xl font-semibold text-ink">
         {type === "create" ? "Create a new admin" : "Update the admin"}
       </h1>
@@ -106,7 +106,7 @@ const AdminForm = ({
       {state.error && (
         <span className="text-red-500">Something went wrong!</span>
       )}
-      <button className="bg-lamaBlue text-white p-2 rounded-md">
+      <button className="mt-2 inline-flex items-center justify-center rounded-xl bg-brand px-5 py-3 text-sm font-bold text-white shadow-lg shadow-brand/20 transition hover:-translate-y-0.5 hover:shadow-xl">
         {type === "create" ? "Create" : "Update"}
       </button>
     </form>

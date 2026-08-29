@@ -9,10 +9,11 @@ const ThemeToggle = () => {
   return (
     <button
       onClick={toggle}
+      type="button"
       aria-label="Toggle theme"
-      className="group flex w-full items-center justify-center lg:justify-between gap-3 rounded-xl border border-line bg-surface px-3 py-2.5 text-ink-muted hover:bg-surface-subtle hover:text-ink transition"
+      className="group flex w-full items-center justify-center gap-3 rounded-xl border border-line/70 bg-surface-muted/65 px-3 py-2.5 text-ink-muted shadow-sm transition hover:border-brand/20 hover:bg-surface-subtle hover:text-ink lg:justify-between"
     >
-      <span className="hidden lg:inline-flex items-center gap-2 text-sm font-medium">
+      <span className="hidden items-center gap-2 text-[12px] font-semibold lg:inline-flex">
         {isDark ? (
           <svg
             xmlns="http://www.w3.org/2000/svg"

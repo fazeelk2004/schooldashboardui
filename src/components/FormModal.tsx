@@ -45,47 +45,61 @@ const deleteActionMap = {
 
 // USE LAZY LOADING
 
+const FormLoading = () => (
+  <div className="space-y-5 py-2">
+    <div className="h-7 w-52 animate-pulse rounded-lg bg-surface-subtle" />
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {[0, 1, 2, 3, 4, 5].map((item) => (
+        <div key={item} className="space-y-2">
+          <div className="h-2.5 w-20 animate-pulse rounded bg-surface-subtle" />
+          <div className="h-11 animate-pulse rounded-xl bg-surface-subtle" />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
 const TeacherForm = dynamic(() => import("./forms/TeacherForm"), {
-  loading: () => <h1>Loading...</h1>,
+  loading: FormLoading,
 });
 const StudentForm = dynamic(() => import("./forms/StudentForm"), {
-  loading: () => <h1>Loading...</h1>,
+  loading: FormLoading,
 });
 const SubjectForm = dynamic(() => import("./forms/SubjectForm"), {
-  loading: () => <h1>Loading...</h1>,
+  loading: FormLoading,
 });
 const ClassForm = dynamic(() => import("./forms/ClassForm"), {
-  loading: () => <h1>Loading...</h1>,
+  loading: FormLoading,
 });
 const ExamForm = dynamic(() => import("./forms/ExamForm"), {
-  loading: () => <h1>Loading...</h1>,
+  loading: FormLoading,
 });
 const SchoolForm = dynamic(() => import("./forms/SchoolForm"), {
-  loading: () => <h1>Loading...</h1>,
+  loading: FormLoading,
 });
 const AdminForm = dynamic(() => import("./forms/AdminForm"), {
-  loading: () => <h1>Loading...</h1>,
+  loading: FormLoading,
 });
 const ParentForm = dynamic(() => import("./forms/ParentForm"), {
-  loading: () => <h1>Loading...</h1>,
+  loading: FormLoading,
 });
 const LessonForm = dynamic(() => import("./forms/LessonForm"), {
-  loading: () => <h1>Loading...</h1>,
+  loading: FormLoading,
 });
 const AssignmentForm = dynamic(() => import("./forms/AssignmentForm"), {
-  loading: () => <h1>Loading...</h1>,
+  loading: FormLoading,
 });
 const ResultForm = dynamic(() => import("./forms/ResultForm"), {
-  loading: () => <h1>Loading...</h1>,
+  loading: FormLoading,
 });
 const EventForm = dynamic(() => import("./forms/EventForm"), {
-  loading: () => <h1>Loading...</h1>,
+  loading: FormLoading,
 });
 const AnnouncementForm = dynamic(() => import("./forms/AnnouncementForm"), {
-  loading: () => <h1>Loading...</h1>,
+  loading: FormLoading,
 });
 const GradeForm = dynamic(() => import("./forms/GradeForm"), {
-  loading: () => <h1>Loading...</h1>,
+  loading: FormLoading,
 });
 // TODO: OTHER FORMS
 
@@ -297,18 +311,21 @@ const FormModal = ({
   return (
     <>
       <button
+        type="button"
         aria-label={type}
-        className={`${size} flex items-center justify-center rounded-lg shadow-soft transition ${bgColor}`}
+        className={`${size} flex items-center justify-center rounded-xl shadow-soft transition hover:-translate-y-0.5 hover:shadow-card ${bgColor}`}
         onClick={() => setOpen(true)}
       >
         <Image src={`/${type}.png`} alt="" width={14} height={14} />
       </button>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="relative max-h-[90vh] w-full overflow-y-auto rounded-2xl border border-line bg-surface p-6 shadow-card md:w-[70%] lg:w-[60%] xl:w-[50%] 2xl:w-[40%]">
+        <div className="form-modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-3 backdrop-blur-md sm:p-5" onMouseDown={() => setOpen(false)}>
+          <div className="form-modal-panel relative max-h-[92vh] w-full overflow-y-auto rounded-[26px] border border-line/80 bg-surface p-5 shadow-2xl sm:p-7 md:w-[82%] lg:w-[72%] xl:w-[62%] 2xl:w-[54%]" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-brand/7 to-transparent" />
             <button
+              type="button"
               aria-label="Close"
-              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-lg text-ink-muted hover:bg-surface-subtle hover:text-ink transition"
+              className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-xl border border-line/70 bg-surface/80 text-ink-muted shadow-sm backdrop-blur transition hover:rotate-90 hover:bg-surface-subtle hover:text-ink"
               onClick={() => setOpen(false)}
             >
               <svg

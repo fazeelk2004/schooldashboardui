@@ -86,12 +86,13 @@ export default function SavedQuizzesList({ schoolId, classes, quizzes }: Props) 
 
   return (
     <>
-      <div className="panel overflow-hidden">
-        <div className="px-6 py-5 border-b border-line">
-          <h2 className="text-lg font-semibold text-ink">My Saved Quizzes</h2>
-          <p className="text-sm text-ink-subtle mt-0.5">Quizzes you&apos;ve generated and saved</p>
+      <div className="dashboard-card overflow-hidden rounded-[24px] border border-line/75 bg-surface shadow-soft">
+        <div className="border-b border-line/70 bg-gradient-to-br from-violet-500/8 via-surface to-brand/5 px-5 py-6 sm:px-7">
+          <span className="dashboard-section-kicker">Your library</span>
+          <div className="mt-2 flex items-end justify-between gap-3"><div><h2 className="text-xl font-bold tracking-[-0.03em] text-ink">Saved quizzes</h2>
+          <p className="mt-1 text-xs text-ink-subtle">Reuse and assign your generated assessments</p></div><span className="rounded-full border border-line bg-surface px-2.5 py-1 text-[10px] font-bold text-ink-muted">{quizzes.length} total</span></div>
         </div>
-        <div className="divide-y divide-line">
+        <div className="space-y-3 p-4 sm:p-5">
           {quizzes.length === 0 ? (
             <div className="px-6 py-12 text-center text-ink-subtle">
               <div className="mx-auto w-10 h-10 rounded-full bg-surface-subtle border border-line flex items-center justify-center mb-3">
@@ -101,15 +102,16 @@ export default function SavedQuizzesList({ schoolId, classes, quizzes }: Props) 
             </div>
           ) : (
             quizzes.map((q) => (
-              <div key={q.id} className="px-6 py-4 hover:bg-surface-subtle transition-colors">
+              <div key={q.id} className="saved-quiz-card rounded-2xl border border-line/70 bg-surface-muted/45 p-4 transition hover:-translate-y-0.5 hover:border-brand/25 hover:bg-surface hover:shadow-card">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="font-medium text-ink truncate">{q.title}</p>
+                    <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-brand/10 text-brand"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg></div>
+                    <p className="truncate font-bold text-ink">{q.title}</p>
                     <p className="text-xs text-ink-subtle mt-0.5">
                       {new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(q.createdAt))}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 text-xs shrink-0">
+                  <div className="flex shrink-0 flex-col items-end gap-2 text-xs sm:flex-row sm:items-center">
                     <span className="chip">{q._count.questions} Qs</span>
                     <span className="chip">{q._count.quizAssignments} assigned</span>
                     <button
@@ -134,15 +136,16 @@ export default function SavedQuizzesList({ schoolId, classes, quizzes }: Props) 
 
       {activeQuiz && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          className="form-modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-md"
           onClick={closeModal}
         >
           <div
-            className="panel w-full max-w-md overflow-hidden"
+            className="form-modal-panel w-full max-w-md overflow-hidden rounded-[24px] border border-line/75 bg-surface shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-6 py-5 border-b border-line">
-              <h3 className="text-lg font-semibold text-ink">Assign Quiz</h3>
+            <div className="border-b border-line/70 bg-gradient-to-br from-brand/10 to-surface px-6 py-5">
+              <span className="dashboard-section-kicker">Schedule assessment</span>
+              <h3 className="mt-2 text-xl font-bold tracking-tight text-ink">Assign quiz</h3>
               <p className="text-sm text-ink-subtle mt-0.5 truncate">{activeQuiz.title}</p>
             </div>
             <div className="p-6 space-y-5">

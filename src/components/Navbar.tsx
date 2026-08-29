@@ -28,19 +28,20 @@ const Navbar = async () => {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-line bg-surface/80 pl-16 pr-4 md:px-6 py-3 backdrop-blur">
+    <header className="dashboard-navbar sticky top-0 z-30 flex min-h-[66px] items-center justify-between gap-3 border-b border-line/70 bg-surface/75 py-3 pl-16 pr-4 backdrop-blur-xl md:px-7">
       {/* SEARCH BAR */}
       <NavbarSearch />
 
       {/* RIGHT */}
-      <div className="ml-auto flex items-center gap-3 sm:gap-4">
+      <div className="ml-auto flex items-center gap-2.5 sm:gap-3.5">
         <NotificationBell initialItems={items} />
 
-        <div className="hidden sm:flex flex-col text-right">
-          <span className="text-sm font-medium leading-tight text-ink">
+        <span className="hidden h-7 w-px bg-line/80 sm:block" />
+        <div className="hidden flex-col text-right sm:flex">
+          <span className="text-sm font-semibold leading-tight text-ink">
             {user?.firstName} {user?.lastName}
           </span>
-          <span className="text-[11px] capitalize text-ink-subtle">
+          <span className="mt-0.5 text-[10px] font-medium capitalize text-ink-subtle">
             {user?.publicMetadata?.role as string}
           </span>
         </div>

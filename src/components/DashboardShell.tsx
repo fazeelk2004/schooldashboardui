@@ -35,11 +35,11 @@ const DashboardShell = ({
   }, [open]);
 
   return (
-    <div className="h-screen flex bg-surface-muted text-ink">
+    <div className="dashboard-shell flex h-screen bg-surface-muted text-ink">
       {/* SIDEBAR — drawer on mobile, fixed column on md+ */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-line bg-surface px-3 py-5 transform transition-transform duration-200 ease-out
-          md:static md:translate-x-0 md:w-[8%] lg:w-[18%] xl:w-[16%]
+        className={`dashboard-sidebar fixed inset-y-0 left-0 z-50 flex w-[278px] flex-col border-r border-line/70 bg-surface px-3.5 py-5 transform transition-transform duration-300 ease-out
+          md:static md:translate-x-0 md:w-[88px] lg:w-[264px]
           ${open ? "translate-x-0 shadow-2xl" : "-translate-x-full md:translate-x-0"}`}
       >
         {sidebar}
@@ -51,18 +51,18 @@ const DashboardShell = ({
           type="button"
           aria-label="Close menu"
           onClick={() => setOpen(false)}
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden"
+          className="dashboard-backdrop fixed inset-0 z-40 bg-slate-950/50 backdrop-blur-sm md:hidden"
         />
       )}
 
       {/* MAIN */}
-      <div className="relative flex flex-1 min-w-0 flex-col overflow-y-auto">
+      <div className="dashboard-main relative flex min-w-0 flex-1 flex-col overflow-y-auto">
         {/* Hamburger — sits over navbar's empty left area on mobile */}
         <button
           type="button"
           aria-label="Open menu"
           onClick={() => setOpen(true)}
-          className="md:hidden fixed top-2.5 left-3 z-40 flex items-center justify-center h-10 w-10 rounded-lg text-ink-muted hover:text-ink hover:bg-surface-subtle"
+          className="fixed left-3 top-2.5 z-40 flex h-10 w-10 items-center justify-center rounded-xl border border-line/70 bg-surface/80 text-ink-muted shadow-sm backdrop-blur hover:bg-surface-subtle hover:text-ink md:hidden"
         >
           <svg
             width="22"
@@ -80,7 +80,7 @@ const DashboardShell = ({
           </svg>
         </button>
         {navbar}
-        <main className="flex-1">{children}</main>
+        <main className="dashboard-content relative flex-1">{children}</main>
       </div>
     </div>
   );

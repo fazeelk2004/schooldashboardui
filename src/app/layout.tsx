@@ -9,8 +9,9 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Faz School Management Dashboard",
-  description: "Next.js School Management System",
+  title: "NeuraLearn — Intelligence for the whole school",
+  description:
+    "A beautifully simple, AI-powered platform for school management, teaching, learning, and progress.",
 };
 
 export default function RootLayout({

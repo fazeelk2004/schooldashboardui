@@ -29,21 +29,22 @@ const UserCard = async ({
   };
 
   return (
-    <div className="flex-1 min-w-[140px] rounded-2xl border border-line bg-surface p-5 shadow-soft hover:shadow-card transition">
+    <div className="metric-card group relative min-w-[140px] flex-1 overflow-hidden rounded-[20px] border border-line/75 bg-surface p-5 shadow-soft">
+      <span className="metric-card-glow absolute -right-10 -top-10 h-28 w-28 rounded-full bg-brand/10 blur-3xl" />
       <div className="flex items-center justify-between">
         <div
-          className={`flex h-10 w-10 items-center justify-center rounded-xl ${accent[type]}`}
+          className={`relative flex h-10 w-10 items-center justify-center rounded-xl transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-105 ${accent[type]}`}
         >
           <Image src={`/${type}.png`} alt="" width={18} height={18} />
         </div>
-        <span className="text-[10px] font-medium uppercase tracking-wider text-ink-subtle">
-          Total
+        <span className="relative inline-flex items-center gap-1.5 rounded-full border border-line/70 bg-surface-muted px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-ink-subtle">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Live
         </span>
       </div>
-      <p className="mt-4 text-3xl font-semibold tracking-tight text-ink">
+      <p className="relative mt-5 text-3xl font-bold tracking-[-0.045em] text-ink">
         {data.toLocaleString()}
       </p>
-      <p className="mt-1 text-sm capitalize text-ink-muted">{type}s</p>
+      <p className="relative mt-1 text-xs font-semibold capitalize text-ink-muted">Total {type}s</p>
     </div>
   );
 };

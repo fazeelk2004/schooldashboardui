@@ -23,6 +23,14 @@ type Assignment = {
   class: { name: string };
 };
 
+const ArrowIcon = ({ back = false }: { back?: boolean }) => (
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`h-4 w-4 ${back ? "rotate-180" : ""}`}><path d="M5 12h14m-5-5 5 5-5 5" /></svg>
+);
+
+const ShieldIcon = () => (
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><path d="M12 22s8-3.8 8-10V5l-8-3-8 3v7c0 6.2 8 10 8 10Z" /><path d="m9 12 2 2 4-4" /></svg>
+);
+
 export default function QuizTakePage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [assignment, setAssignment] = useState<Assignment | null>(null);
@@ -33,8 +41,8 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
   const [result, setResult] = useState<{ score: number; totalMarks: number; percentage: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentQ, setCurrentQ] = useState(0);
+  const [clock, setClock] = useState(() => Date.now());
 
-  // Refs so the visibility handler always sees the latest values
   const assignmentRef = useRef<Assignment | null>(null);
   const answersRef = useRef<Record<number, string>>({});
   const submittedRef = useRef(false);
@@ -47,7 +55,7 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     fetch(`/api/quiz/${params.id}`)
-      .then((r) => r.json())
+      .then((response) => response.json())
       .then((data) => {
         if (data.error) { toast.error(data.error); router.push("/list/my-quizzes"); return; }
         setAssignment(data);
@@ -56,11 +64,16 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
       .catch(() => { toast.error("Failed to load quiz."); router.push("/list/my-quizzes"); });
   }, [params.id, router]);
 
-  /* ── Anti-cheat: lock quiz if student switches tabs/windows ── */
+  useEffect(() => {
+    if (!assignment || submitted || locked) return;
+    const timer = window.setInterval(() => setClock(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [assignment, submitted, locked]);
+
   const lockQuiz = useCallback(async () => {
     if (lockedRef.current || submittedRef.current) return;
-    const a = assignmentRef.current;
-    if (!a) return;
+    const activeAssignment = assignmentRef.current;
+    if (!activeAssignment) return;
     lockedRef.current = true;
     setLocked(true);
     try {
@@ -68,49 +81,76 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          quizAssignmentId: a.id,
-          answers: a.quiz.questions.map((q) => ({
-            questionId: q.id,
-            studentAnswer: answersRef.current[q.id] || "",
+          quizAssignmentId: activeAssignment.id,
+          answers: activeAssignment.quiz.questions.map((question) => ({
+            questionId: question.id,
+            studentAnswer: answersRef.current[question.id] || "",
           })),
         }),
       });
     } catch {
-      /* swallow — already locked client-side */
+      // The client remains locked even if the network request fails.
     }
   }, []);
 
-  useEffect(() => {
-    if (loading || submitted || locked) return;
+  const handleSubmit = useCallback(async () => {
     if (!assignment) return;
+    const questions = assignment.quiz.questions;
+    const answered = Object.keys(answersRef.current).length;
+    if (answered < questions.length) {
+      const unanswered = questions.length - answered;
+      if (!confirm(`You have ${unanswered} unanswered question(s). Submit anyway?`)) return;
+    }
 
-    const endMs = new Date(assignment.endTime).getTime();
-    const remaining = endMs - Date.now();
+    setSubmitting(true);
+    try {
+      const response = await fetch("/api/quiz/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          quizAssignmentId: assignment.id,
+          answers: questions.map((question) => ({
+            questionId: question.id,
+            studentAnswer: answersRef.current[question.id] || "",
+          })),
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Submission failed");
+      setResult(data);
+      submittedRef.current = true;
+      setSubmitted(true);
+    } catch (error: unknown) {
+      toast.error((error as Error).message);
+    } finally {
+      setSubmitting(false);
+    }
+  }, [assignment]);
+
+  useEffect(() => {
+    if (loading || submitted || locked || !assignment) return;
+    const remaining = new Date(assignment.endTime).getTime() - Date.now();
     if (remaining <= 0) {
-      // Window already closed — auto-submit so the attempt is recorded.
-      handleSubmit();
+      void handleSubmit();
       return;
     }
     const timer = setTimeout(() => {
-      toast.info("Time's up — submitting your quiz.");
-      handleSubmit();
+      toast.info("Time’s up — submitting your quiz.");
+      void handleSubmit();
     }, remaining);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, submitted, locked, assignment]);
+  }, [loading, submitted, locked, assignment, handleSubmit]);
 
   useEffect(() => {
     if (loading || submitted || locked) return;
-
     const onVisibility = () => {
-      if (document.visibilityState === "hidden") lockQuiz();
+      if (document.visibilityState === "hidden") void lockQuiz();
     };
-    const onBlur = () => lockQuiz();
-    const onBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      e.returnValue = "";
+    const onBlur = () => void lockQuiz();
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
     };
-
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("blur", onBlur);
     window.addEventListener("beforeunload", onBeforeUnload);
@@ -122,49 +162,13 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
   }, [loading, submitted, locked, lockQuiz]);
 
   const handleAnswer = (questionId: number, answer: string) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: answer }));
-  };
-
-  const handleSubmit = async () => {
-    if (!assignment) return;
-    const questions = assignment.quiz.questions;
-    const answered = Object.keys(answers).length;
-    if (answered < questions.length) {
-      const unanswered = questions.length - answered;
-      if (!confirm(`You have ${unanswered} unanswered question(s). Submit anyway?`)) return;
-    }
-
-    setSubmitting(true);
-    try {
-      const res = await fetch("/api/quiz/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          quizAssignmentId: assignment.id,
-          answers: questions.map((q) => ({
-            questionId: q.id,
-            studentAnswer: answers[q.id] || "",
-          })),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Submission failed");
-      setResult(data);
-      setSubmitted(true);
-    } catch (err: unknown) {
-      toast.error((err as Error).message);
-    } finally {
-      setSubmitting(false);
-    }
+    setAnswers((previous) => ({ ...previous, [questionId]: answer }));
   };
 
   if (loading) {
     return (
-      <div className="p-4 flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-lamaSky border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500">Loading quiz…</p>
-        </div>
+      <div className="quiz-focus-page flex min-h-[75vh] items-center justify-center p-5">
+        <div className="text-center"><div className="quiz-loader mx-auto mb-5 h-14 w-14 rounded-2xl border border-brand/20 bg-brand/10 p-3"><span className="block h-full w-full animate-spin rounded-full border-2 border-brand border-t-transparent" /></div><p className="text-sm font-semibold text-ink-muted">Preparing your quiz…</p></div>
       </div>
     );
   }
@@ -172,180 +176,106 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
   if (!assignment) return null;
 
   const questions = assignment.quiz.questions;
-  const progress = (Object.keys(answers).length / questions.length) * 100;
+  const progress = questions.length ? (Object.keys(answers).length / questions.length) * 100 : 0;
+  const remainingMs = Math.max(0, new Date(assignment.endTime).getTime() - clock);
+  const remainingMinutes = Math.floor(remainingMs / 60000);
+  const remainingSeconds = Math.floor((remainingMs % 60000) / 1000);
 
-  /* ── Locked screen (tab-switch detected) ── */
   if (locked) {
     return (
-      <div className="p-4 flex items-center justify-center min-h-[60vh]">
-        <div className="bg-white rounded-md shadow-sm border border-gray-200 p-8 max-w-md w-full text-center">
-          <div className="text-6xl mb-4">🔒</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Quiz Locked</h2>
-          <p className="text-gray-600 mb-4">
-            You left the quiz tab/window. For academic integrity, your attempt has been
-            locked and submitted automatically.
-          </p>
-          <div className="bg-red-50 border border-red-100 text-red-700 text-sm rounded-md p-3 mb-6">
-            You can no longer take this quiz. Please contact your teacher if you believe this was a mistake.
-          </div>
-          <button
-            onClick={() => router.push("/list/my-quizzes")}
-            className="w-full bg-lamaSky text-gray-800 py-3 rounded-md font-semibold hover:bg-lamaSky/80 transition"
-          >
-            ← Back to My Quizzes
-          </button>
+      <div className="quiz-focus-page flex min-h-[75vh] items-center justify-center p-5">
+        <div className="result-panel w-full max-w-lg rounded-[28px] border border-line/75 bg-surface p-7 text-center shadow-2xl sm:p-10">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-7 w-7"><rect x="4" y="10" width="16" height="11" rx="3" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg></div>
+          <span className="mt-5 inline-flex rounded-full bg-rose-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-rose-500">Attempt secured</span>
+          <h2 className="mt-4 text-3xl font-bold tracking-[-0.045em] text-ink">Quiz locked</h2>
+          <p className="mt-3 text-sm leading-6 text-ink-muted">The quiz window lost focus, so your current answers were submitted automatically to protect academic integrity.</p>
+          <div className="mt-5 rounded-2xl border border-rose-500/15 bg-rose-500/5 p-4 text-xs leading-5 text-rose-600 dark:text-rose-300">Contact your teacher if you believe this happened by mistake.</div>
+          <button type="button" onClick={() => router.push("/list/my-quizzes")} className="landing-button-secondary mt-7 w-full gap-2 px-5 py-3"><ArrowIcon back />Back to my quizzes</button>
         </div>
       </div>
     );
   }
 
-  /* ── Result screen ── */
   if (submitted && result) {
-    const pct = result.percentage;
-    const grade = pct >= 90 ? "A+" : pct >= 80 ? "A" : pct >= 70 ? "B" : pct >= 60 ? "C" : pct >= 50 ? "D" : "F";
-    const gradeColor = pct >= 70 ? "text-green-600" : pct >= 50 ? "text-yellow-600" : "text-red-600";
-
+    const percentage = result.percentage;
+    const grade = percentage >= 90 ? "A+" : percentage >= 80 ? "A" : percentage >= 70 ? "B" : percentage >= 60 ? "C" : percentage >= 50 ? "D" : "F";
     return (
-      <div className="p-4 flex items-center justify-center min-h-[60vh]">
-        <div className="bg-white rounded-md shadow-sm border border-gray-200 p-8 max-w-md w-full text-center">
-          <div className="text-6xl mb-4">{pct >= 70 ? "🎉" : pct >= 50 ? "📚" : "💪"}</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-1">Quiz Submitted!</h2>
-          <p className="text-gray-500 mb-6">{assignment.quiz.title}</p>
-          <div className={`text-7xl font-black mb-2 ${gradeColor}`}>{pct}%</div>
-          <div className={`text-2xl font-bold mb-4 ${gradeColor}`}>Grade: {grade}</div>
-          <div className="bg-lamaSkyLight rounded-md p-4 mb-6">
-            <p className="text-gray-600 text-sm">
-              You answered <strong className="text-gray-800">{result.score}</strong> out of{" "}
-              <strong className="text-gray-800">{result.totalMarks}</strong> questions correctly.
-            </p>
+      <div className="quiz-focus-page flex min-h-[75vh] items-center justify-center p-5">
+        <div className="result-panel relative w-full max-w-xl overflow-hidden rounded-[30px] border border-line/75 bg-surface p-7 text-center shadow-2xl sm:p-10">
+          <span className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-brand/15 blur-3xl" />
+          <div className="relative">
+            <span className="dashboard-section-kicker">Assessment complete</span>
+            <h2 className="mt-4 text-3xl font-bold tracking-[-0.045em] text-ink">Quiz submitted</h2>
+            <p className="mt-2 text-sm text-ink-muted">{assignment.quiz.title}</p>
+            <div className="score-ring mx-auto mt-7 flex h-40 w-40 items-center justify-center rounded-full p-3" style={{ background: `conic-gradient(rgb(var(--brand)) ${percentage * 3.6}deg, rgb(var(--surface-subtle)) 0deg)` }}>
+              <div className="flex h-full w-full flex-col items-center justify-center rounded-full bg-surface"><span className="text-4xl font-bold tracking-tight text-ink">{percentage}%</span><span className="mt-1 text-xs font-bold text-brand">Grade {grade}</span></div>
+            </div>
+            <p className="mx-auto mt-6 max-w-sm text-sm leading-6 text-ink-muted">You answered <strong className="text-ink">{result.score}</strong> out of <strong className="text-ink">{result.totalMarks}</strong> questions correctly.</p>
+            <button type="button" onClick={() => router.push("/list/my-quizzes")} className="btn-primary mt-7 w-full gap-2 py-3"><ArrowIcon back />Back to my quizzes</button>
           </div>
-          <button
-            onClick={() => router.push("/list/my-quizzes")}
-            className="w-full bg-lamaSky text-gray-800 py-3 rounded-md font-semibold hover:bg-lamaSky/80 transition"
-          >
-            ← Back to My Quizzes
-          </button>
         </div>
       </div>
     );
   }
 
-  const q = questions[currentQ];
-  const difficultyColor = (d: string) =>
-    d === "easy" ? "bg-green-100 text-green-700" : d === "hard" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700";
+  const question = questions[currentQ];
+  if (!question) return null;
+
+  const difficultyClass = question.difficulty === "easy" ? "quiz-difficulty-easy" : question.difficulty === "hard" ? "quiz-difficulty-hard" : "quiz-difficulty-medium";
 
   return (
-    <div className="p-4 max-w-3xl mx-auto">
-      {/* Anti-cheat warning banner */}
-      <div className="bg-lamaYellowLight border border-lamaYellow rounded-md px-4 py-2.5 mb-4 flex items-center gap-2 text-sm text-gray-700">
-        <span className="text-lg">⚠️</span>
-        <span>
-          <strong>Stay on this tab.</strong> Switching tabs, minimizing, or leaving this window will lock your quiz permanently.
-        </span>
-      </div>
-
-      {/* Header */}
-      <div className="bg-white rounded-md shadow-sm border border-gray-200 overflow-hidden mb-4">
-        <div className="bg-lamaSky px-6 py-4">
-          <h1 className="text-gray-800 font-bold text-lg">{assignment.quiz.title}</h1>
-          <p className="text-gray-700 text-sm">
-            👤 {assignment.quiz.teacher.name} {assignment.quiz.teacher.surname} · 🏫 {assignment.class.name}
-          </p>
+    <div className="quiz-focus-page min-h-full p-4 sm:p-6 lg:p-8">
+      <div className="mx-auto max-w-5xl">
+        <div className="mb-4 flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/8 px-4 py-3 text-xs leading-5 text-amber-800 dark:text-amber-200">
+          <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/15"><ShieldIcon /></span>
+          <span><strong className="block font-bold">Focus mode is active</strong>Switching tabs, minimizing, or leaving this window will lock and submit your quiz.</span>
         </div>
-        {/* Progress */}
-        <div className="px-6 py-3">
-          <div className="flex justify-between text-xs text-gray-500 mb-1.5">
-            <span>{Object.keys(answers).length} of {questions.length} answered</span>
-            <span>Q {currentQ + 1}/{questions.length}</span>
+
+        <header className="quiz-take-header relative overflow-hidden rounded-[24px] border border-line/75 bg-surface p-5 shadow-soft sm:p-6">
+          <span className="absolute -right-12 -top-16 h-40 w-40 rounded-full bg-brand/15 blur-3xl" />
+          <div className="relative flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+            <div><span className="dashboard-section-kicker">Live assessment</span><h1 className="mt-2 text-2xl font-bold tracking-[-0.04em] text-ink">{assignment.quiz.title}</h1><p className="mt-1.5 text-xs font-medium text-ink-muted">{assignment.quiz.teacher.name} {assignment.quiz.teacher.surname} · {assignment.class.name}</p></div>
+            <div className="flex items-center gap-2 rounded-xl border border-line bg-surface-muted/70 px-3 py-2 text-xs font-bold text-ink"><span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />{remainingMinutes}:{remainingSeconds.toString().padStart(2, "0")} remaining</div>
           </div>
-          <div className="w-full bg-gray-100 rounded-full h-2">
-            <div
-              className="h-full bg-lamaPurple rounded-full transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
+          <div className="relative mt-6">
+            <div className="mb-2 flex justify-between text-[10px] font-bold uppercase tracking-wider text-ink-subtle"><span>{Object.keys(answers).length} of {questions.length} answered</span><span>Question {currentQ + 1}/{questions.length}</span></div>
+            <div className="h-2 overflow-hidden rounded-full bg-surface-subtle"><div className="quiz-progress h-full rounded-full bg-gradient-to-r from-brand to-violet-500 transition-all duration-500" style={{ width: `${progress}%` }} /></div>
           </div>
-        </div>
-      </div>
+        </header>
 
-      {/* Question Card */}
-      <div className="bg-white rounded-md shadow-sm border border-gray-200 p-6 mb-4">
-        <div className="flex items-start justify-between gap-3 mb-4">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-400 font-medium">Question {currentQ + 1}</span>
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${difficultyColor(q.difficulty)}`}>
-              {q.difficulty}
-            </span>
-          </div>
-          {answers[q.id] && (
-            <span className="text-xs bg-green-100 text-green-600 px-2 py-0.5 rounded-full font-medium">✓ Answered</span>
-          )}
-        </div>
-        <p className="text-gray-800 font-semibold text-base leading-relaxed mb-6">{q.question}</p>
-        <div className="space-y-3">
-          {(q.options as string[]).map((option, idx) => {
-            const label = String.fromCharCode(65 + idx);
-            const isSelected = answers[q.id] === option;
-            return (
-              <button
-                key={idx}
-                onClick={() => handleAnswer(q.id, option)}
-                className={`w-full text-left flex items-center gap-3 px-4 py-3 rounded-md border transition-all
-                  ${isSelected
-                    ? "border-lamaSky bg-lamaSkyLight text-gray-800"
-                    : "border-gray-200 bg-white hover:bg-lamaPurpleLight text-gray-700"
-                  }`}
-              >
-                <span className={`w-7 h-7 flex items-center justify-center rounded-full text-sm font-bold shrink-0
-                  ${isSelected ? "bg-lamaSky text-gray-800" : "bg-gray-100 text-gray-500 border border-gray-200"}`}>
-                  {label}
-                </span>
-                <span className="text-sm">{option}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+        <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_220px]">
+          <section className="question-card rounded-[24px] border border-line/75 bg-surface p-5 shadow-soft sm:p-7">
+            <div className="flex items-center justify-between gap-3"><div className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand/10 text-xs font-bold text-brand">{currentQ + 1}</span><span className={`quiz-difficulty ${difficultyClass}`}>{question.difficulty}</span></div>{answers[question.id] && <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-300"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Answered</span>}</div>
+            <h2 className="mt-6 text-lg font-bold leading-8 tracking-[-0.02em] text-ink sm:text-xl">{question.question}</h2>
+            <div className="mt-7 space-y-3">
+              {question.options.map((option, index) => {
+                const label = String.fromCharCode(65 + index);
+                const selected = answers[question.id] === option;
+                return (
+                  <button type="button" key={option} onClick={() => handleAnswer(question.id, option)} className={`quiz-option group flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5 text-left transition-all ${selected ? "is-selected border-brand/50 bg-brand/8 text-ink shadow-sm" : "border-line/80 bg-surface-muted/35 text-ink-muted hover:-translate-y-0.5 hover:border-brand/25 hover:bg-surface"}`}>
+                    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-bold transition ${selected ? "bg-brand text-white shadow-md shadow-brand/20" : "border border-line bg-surface text-ink-subtle group-hover:text-brand"}`}>{label}</span><span className="text-sm font-semibold leading-6">{option}</span>{selected && <span className="ml-auto text-brand"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" className="h-4 w-4"><path d="m5 12 4 4L19 6" /></svg></span>}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-7 flex gap-3 border-t border-line/70 pt-5">
+              <button type="button" onClick={() => setCurrentQ((index) => Math.max(0, index - 1))} disabled={currentQ === 0} className="landing-button-secondary flex-1 gap-2 px-4 py-2.5 disabled:cursor-not-allowed disabled:opacity-40"><ArrowIcon back />Previous</button>
+              {currentQ < questions.length - 1 ? (
+                <button type="button" onClick={() => setCurrentQ((index) => index + 1)} className="btn-primary flex-1 gap-2 py-2.5">Next<ArrowIcon /></button>
+              ) : (
+                <button type="button" onClick={() => void handleSubmit()} disabled={submitting} className="btn-primary flex-1 gap-2 py-2.5 disabled:opacity-50">{submitting ? "Submitting…" : "Submit quiz"}<ArrowIcon /></button>
+              )}
+            </div>
+          </section>
 
-      {/* Navigation */}
-      <div className="flex items-center justify-between gap-3">
-        <button
-          onClick={() => setCurrentQ((q) => Math.max(0, q - 1))}
-          disabled={currentQ === 0}
-          className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-md font-semibold hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
-        >
-          ← Previous
-        </button>
-
-        {/* Question dots */}
-        <div className="flex gap-1.5 flex-wrap justify-center max-w-[200px]">
-          {questions.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrentQ(i)}
-              className={`w-6 h-6 rounded-full text-xs font-medium transition-all
-                ${i === currentQ ? "bg-lamaSky text-gray-800 scale-110" : answers[questions[i].id] ? "bg-lamaPurple text-gray-700" : "bg-gray-100 text-gray-500"}`}
-            >
-              {i + 1}
-            </button>
-          ))}
+          <aside className="question-map h-fit rounded-[22px] border border-line/75 bg-surface p-4 shadow-soft lg:sticky lg:top-24">
+            <div className="flex items-center justify-between"><div><span className="dashboard-section-kicker">Navigate</span><h3 className="mt-1 text-sm font-bold text-ink">Question map</h3></div><span className="text-[10px] font-bold text-ink-subtle">{Math.round(progress)}%</span></div>
+            <div className="mt-4 grid grid-cols-5 gap-2 lg:grid-cols-4">
+              {questions.map((item, index) => <button type="button" key={item.id} onClick={() => setCurrentQ(index)} aria-label={`Go to question ${index + 1}`} className={`flex aspect-square items-center justify-center rounded-xl text-[11px] font-bold transition ${index === currentQ ? "scale-105 bg-brand text-white shadow-md shadow-brand/20" : answers[item.id] ? "bg-emerald-500/12 text-emerald-600 dark:text-emerald-300" : "border border-line bg-surface-muted text-ink-subtle hover:border-brand/25"}`}>{index + 1}</button>)}
+            </div>
+            <div className="mt-5 space-y-2 border-t border-line/70 pt-4 text-[10px] font-medium text-ink-subtle"><div className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded bg-brand" />Current</div><div className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded bg-emerald-500/40" />Answered</div></div>
+          </aside>
         </div>
-
-        {currentQ < questions.length - 1 ? (
-          <button
-            onClick={() => setCurrentQ((q) => q + 1)}
-            className="flex-1 bg-lamaSky text-gray-800 py-2.5 rounded-md font-semibold hover:bg-lamaSky/80 transition"
-          >
-            Next →
-          </button>
-        ) : (
-          <button
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="flex-1 bg-lamaYellow text-gray-800 py-2.5 rounded-md font-semibold hover:bg-lamaYellow/80 disabled:opacity-50 transition shadow-sm"
-          >
-            {submitting ? "Submitting…" : "✅ Submit Quiz"}
-          </button>
-        )}
       </div>
     </div>
   );
